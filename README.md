@@ -7,50 +7,52 @@
 ![Render](https://img.shields.io/badge/API-Render-46e3b7?logo=render&logoColor=white)
 ![Cloudflare Pages](https://img.shields.io/badge/Front-Cloudflare%20Pages-f38020?logo=cloudflare&logoColor=white)
 
-**Clinique Éclat** : application web full stack d'un cabinet de chirurgie plastique, esthétique et reconstructrice. Elle regroupe un site vitrine, la prise de rendez-vous en ligne, une messagerie sécurisée, un espace docteur et une administration des comptes.
+**Clinique Éclat** is a full-stack web application for a plastic, aesthetic and reconstructive surgery practice. It combines a public website, online appointment booking, secure messaging, a doctor workspace and account administration.
 
-Trois rôles : **patient**, **docteur**, **administrateur**. Les visiteurs sans compte peuvent consulter le site et écrire au cabinet.
+Three roles: **patient**, **doctor**, **admin**. Visitors without an account can browse the site and contact the clinic.
 
-| Partie | Technologies | Hébergement |
+The user interface is in French; the code and its comments are in English.
+
+| Part | Stack | Hosting |
 |---|---|---|
-| `frontend/` | Angular 21 (standalone, signals, zoneless), CSS sur mesure | Cloudflare Pages |
+| `frontend/` | Angular 21 (standalone, signals, zoneless), custom CSS | Cloudflare Pages |
 | `backend/` | Spring Boot 4.1, Java 21, Spring Security (JWT), Spring Data MongoDB | Render (Docker) |
-| Base de données | MongoDB | MongoDB Atlas |
-| Emails | API Resend | — |
+| Database | MongoDB | MongoDB Atlas |
+| Email | Resend API | — |
 
-## Fonctionnalités
+## Features
 
-**Visiteurs (sans compte)**
-- Site vitrine : accueil, interventions filtrables par catégorie, horaires, contact.
-- Formulaire de contact « invité » (champ anti-spam invisible, limitation de débit) : le docteur reçoit un email et répond depuis sa messagerie ; la réponse part par email.
-- Préparation d'un rendez-vous (motif, date, créneau). La **confirmation exige un compte** ; la sélection est conservée pendant l'inscription ou la connexion.
+**Visitors (no account)**
+- Public website: home page, procedures filterable by category, opening hours, contact.
+- Guest contact form (invisible honeypot field, rate limiting): the doctor gets an email and replies from the messaging inbox; the reply is sent to the guest by email.
+- Appointment preparation (reason, date, time slot). **Confirming requires an account**; the selection is kept during sign-up or login.
 
 **Patients**
-- Inscription, connexion, mot de passe oublié.
-- Réservation de créneaux réels (horaires du cabinet, sans chevauchement), statut « en attente » jusqu'à confirmation.
-- Annulation en ligne jusqu'à 24 h avant, historique.
-- Messagerie avec le cabinet, compteur de non-lus.
-- Profil et changement de mot de passe.
+- Sign-up, login, forgot password.
+- Booking of real time slots (clinic opening hours, no overlaps), "pending" status until the clinic confirms.
+- Online cancellation up to 24 h before the appointment, appointment history.
+- Messaging with the clinic, unread counter.
+- Profile and password change.
 
-**Docteur**
-- Tableau de bord : rendez-vous du jour et de la semaine, demandes à confirmer, messages non lus, taux d'annulation, rendez-vous par mois, interventions demandées.
-- Agenda par semaine : confirmer, refuser, **déplacer** (créneaux libres ou horaire libre), marquer terminé ou absent.
-- Accès à **tous les patients** et à leurs coordonnées, notes médicales privées.
-- **Création d'un patient sans compte** (badge « Sans compte ») et prise de rendez-vous pour lui, puis invitation par email à créer son mot de passe.
-- Messagerie : filtres (non lues, invités, archivées), réponses, archivage.
+**Doctor**
+- Dashboard: today's and this week's appointments, requests to confirm, unread messages, cancellation rate, appointments per month, most requested procedures.
+- Weekly agenda: confirm, decline, **reschedule** (free slots or custom time), mark as completed or no-show.
+- Access to **all patients** and their contact details, private medical notes.
+- **Create patients without an account** ("Sans compte" badge), book appointments for them, then invite them by email to set a password.
+- Messaging: filters (unread, guests, archived), replies, archiving.
 
-**Administrateur**
-- Tableau de bord : utilisateurs par rôle, inscriptions par mois, comptes restreints, connexions récentes.
-- CRUD des utilisateurs, **changement de rôle**, **restriction / réactivation** (effet immédiat, motif affiché), **définition d'un mot de passe**.
-- Accès à tout l'espace docteur.
+**Admin**
+- Dashboard: users per role, sign-ups per month, restricted accounts, recent logins.
+- User CRUD, **role changes**, **restrict / reactivate** accounts (immediate effect, reason shown to the user), **set a password**.
+- Full access to the doctor workspace.
 
-**Emails (Resend)** : nouvelle demande de rendez-vous, nouveau message, annulation par un patient (au docteur) ; accusé de réception, confirmation, déplacement, annulation, réponse, invitation, bienvenue, réinitialisation (au patient).
+**Emails (Resend)**: new appointment request, new message, cancellation by a patient (to the doctor); acknowledgement, confirmation, rescheduling, cancellation, reply, invitation, welcome, password reset (to the patient).
 
-**Interface** : thème clair / sombre / système (bascule animée), responsive, toasts empilables (pause au survol, balayage pour fermer), badges, bannières, skeletons de chargement, illustrations pour les états vides et les erreurs, transitions de page (View Transitions API), `prefers-reduced-motion` respecté.
+**UI**: light / dark / system theme (animated toggle), responsive layout, stacked toasts (pause on hover, swipe to dismiss), badges, banners, skeleton loaders, illustrations for empty and error states, page transitions (View Transitions API), `prefers-reduced-motion` respected.
 
-## Démarrage en local
+## Getting started
 
-Prérequis : Java 21, Maven 3.9, Node 20.19+ (ou 22), MongoDB (local ou Atlas).
+Requirements: Java 21, Maven 3.9, Node 20.19+ (or 22), MongoDB (local or Atlas).
 
 ```bash
 git clone https://github.com/ACHRAF-BADRI/surgery-clinic-fullstack.git
@@ -58,106 +60,107 @@ cd surgery-clinic-fullstack
 
 # Backend
 cd backend
-cp .env.example .env        # puis renseignez les valeurs
+cp .env.example .env        # then fill in the values
 mvn spring-boot:run          # http://localhost:8080
 
-# Frontend (autre terminal)
+# Frontend (second terminal)
 cd frontend
 cp .env.example .env         # API_URL=http://localhost:8080
 npm install
 npm start                    # http://localhost:4200
 ```
 
-`npm start` et `npm run build` génèrent d'abord `src/environments/runtime-config.ts` à partir de `API_URL` (fichier non versionné).
+`npm start` and `npm run build` first generate `src/environments/runtime-config.ts` from `API_URL` (this file is not versioned).
 
-Si le port 8080 est déjà pris, ajoutez `PORT=8090` dans `backend/.env` et `API_URL=http://localhost:8090` dans `frontend/.env`. Pour une base Atlas, l'adresse IP de votre poste doit être autorisée dans **Network Access**.
+If port 8080 is already in use, add `PORT=8090` to `backend/.env` and `API_URL=http://localhost:8090` to `frontend/.env`. With an Atlas database, your machine's IP address must be allowed under **Network Access**.
 
-Évitez les accents dans les valeurs de `backend/.env` : Spring lit ce fichier en ISO-8859-1. Les valeurs accentuées se définissent dans `application.yml` ou sur Render.
+Avoid accented characters in `backend/.env` values: Spring reads this file as ISO-8859-1. Set accented values in `application.yml` or on Render instead.
 
-Au premier démarrage, le backend crée un administrateur et un docteur (`ADMIN_*`, `DOCTOR_*`). Avec `SEED_DEMO_DATA=true` et une base sans patient, il ajoute 10 patients fictifs (mot de passe `Patient#2026`), des rendez-vous et des messages.
+On first startup, the backend creates an admin and a doctor account (`ADMIN_*`, `DOCTOR_*`). With `SEED_DEMO_DATA=true` and a database without patients, it also adds 10 fake patients (password `Patient#2026`), appointments and messages.
 
-## Variables d'environnement (backend)
+## Environment variables (backend)
 
-| Variable | Rôle |
+| Variable | Purpose |
 |---|---|
-| `MONGODB_URI` | Chaîne de connexion MongoDB (Atlas : `mongodb+srv://…/clinic`) |
-| `JWT_SECRET` | Secret de signature des jetons (chaîne aléatoire longue) |
-| `RESEND_API_KEY` | Clé API Resend. Absente : les emails sont seulement journalisés |
-| `MAIL_FROM` | Expéditeur, sur un domaine vérifié dans Resend |
-| `DOCTOR_NOTIFICATION_EMAIL` | Adresse(s) qui reçoivent les notifications du cabinet |
-| `FRONTEND_URL` | URL publique du frontend (liens des emails) |
-| `ALLOWED_ORIGINS` | Origines CORS autorisées, séparées par des virgules (jokers acceptés) |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Administrateur créé au premier démarrage |
-| `DOCTOR_EMAIL` / `DOCTOR_PASSWORD` / `DOCTOR_FIRST_NAME` / `DOCTOR_LAST_NAME` | Docteur créé au premier démarrage |
-| `CLINIC_NAME`, `CLINIC_TIME_ZONE` | Nom et fuseau du cabinet (défaut : Europe/Paris) |
-| `SEED_DEMO_DATA` | `true` pour les données fictives |
+| `MONGODB_URI` | MongoDB connection string (Atlas: `mongodb+srv://…/clinic`) |
+| `JWT_SECRET` | Token signing secret (long random string) |
+| `RESEND_API_KEY` | Resend API key. When missing, emails are only logged |
+| `MAIL_FROM` | Sender address, on a domain verified in Resend |
+| `DOCTOR_NOTIFICATION_EMAIL` | Address(es) receiving the clinic notifications |
+| `FRONTEND_URL` | Public frontend URL (used for links in emails) |
+| `ALLOWED_ORIGINS` | Allowed CORS origins, comma-separated (wildcards allowed) |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Admin account created on first startup |
+| `DOCTOR_EMAIL` / `DOCTOR_PASSWORD` / `DOCTOR_FIRST_NAME` / `DOCTOR_LAST_NAME` | Doctor account created on first startup |
+| `CLINIC_NAME`, `CLINIC_TIME_ZONE` | Clinic name and time zone (default: Europe/Paris) |
+| `SEED_DEMO_DATA` | `true` to create fake demo data |
+| `PORT` | HTTP port (default 8080; set automatically by Render) |
 
-Les horaires d'ouverture et la durée des créneaux se règlent dans `backend/src/main/resources/application.yml` (`app.schedule`). L'identité affichée (nom, docteur, adresse, téléphone) se règle dans `frontend/src/app/core/config.ts`.
+Opening hours and slot length are configured in `backend/src/main/resources/application.yml` (`app.schedule`). The clinic identity shown in the UI (name, doctor, address, phone) is configured in `frontend/src/app/core/config.ts`.
 
-## Déploiement
+## Deployment
 
 ### 1. MongoDB Atlas
-Créez un cluster (l'offre gratuite M0 suffit), un utilisateur de base de données, puis autorisez l'accès réseau depuis `0.0.0.0/0` (les IP sortantes de Render ne sont pas fixes sur l'offre gratuite). Copiez la chaîne de connexion en ajoutant le nom de base : `…mongodb.net/clinic?retryWrites=true&w=majority`.
+Create a cluster (the free M0 tier is enough) and a database user, then allow network access from `0.0.0.0/0` (Render's outbound IPs are not fixed on the free plan). Copy the connection string and add the database name: `…mongodb.net/clinic?retryWrites=true&w=majority`.
 
 ### 2. Resend
-Vérifiez votre domaine (Domains), créez une clé API (une clé « Sending access » suffit) et utilisez une adresse de ce domaine dans `MAIL_FROM`. Sans domaine vérifié, `onboarding@resend.dev` ne peut écrire qu'à l'adresse de votre compte Resend.
+Verify your domain (Domains), create an API key (a "Sending access" key is enough) and use an address on that domain in `MAIL_FROM`. Without a verified domain, `onboarding@resend.dev` can only send to your Resend account's own address.
 
-### 3. Backend sur Render
-Render → **New → Blueprint** → sélectionnez ce dépôt : `render.yaml` crée le service Docker (`backend/Dockerfile`) et demande les variables marquées `sync: false`. `JWT_SECRET` est généré automatiquement. Le health check est `/api/health`.
+### 3. Backend on Render
+Render → **New → Blueprint** → select this repository. `render.yaml` creates the Docker service (`backend/Dockerfile`) and prompts for the variables marked `sync: false`. `JWT_SECRET` is generated automatically. The health check path is `/api/health`.
 
-Sur l'offre gratuite, le service se met en veille après 15 minutes d'inactivité ; la première requête suivante prend environ une minute. Le frontend affiche alors un état d'erreur avec un bouton « Réessayer ».
+On the free plan, the service sleeps after 15 minutes of inactivity and the next request takes about a minute. Meanwhile the frontend shows an error state with a "Réessayer" (retry) button.
 
-### 4. Frontend sur Cloudflare Pages
-Workers & Pages → **Create → Pages → Connect to Git** :
+### 4. Frontend on Cloudflare Pages
+Workers & Pages → **Create → Pages → Connect to Git**:
 
-| Réglage | Valeur |
+| Setting | Value |
 |---|---|
 | Root directory | `frontend` |
 | Build command | `npm run build` |
 | Build output directory | `dist/frontend/browser` |
-| Variables | `API_URL=https://<votre-service>.onrender.com`, `NODE_VERSION=22` |
+| Variables | `API_URL=https://<your-service>.onrender.com`, `NODE_VERSION=22` |
 
-`public/_redirects` gère le routage de l'application monopage et `public/_headers` ajoute les en-têtes de sécurité et de cache.
+`public/_redirects` handles single-page app routing and `public/_headers` adds security and cache headers.
 
-Enfin, reportez l'URL Pages dans `FRONTEND_URL` et `ALLOWED_ORIGINS` sur Render (par ex. `https://clinique-eclat.pages.dev,https://*.clinique-eclat.pages.dev` pour inclure les déploiements de prévisualisation).
+Finally, set the Pages URL in `FRONTEND_URL` and `ALLOWED_ORIGINS` on Render (e.g. `https://clinique-eclat.pages.dev,https://*.clinique-eclat.pages.dev` to include preview deployments).
 
-## Structure
+## Project structure
 
 ```
 backend/
   src/main/java/com/eclat/clinic/
-    config/      sécurité, propriétés, données initiales
-    model/       documents MongoDB et énumérations
-    repository/  accès aux données
-    service/     logique métier, emails Resend, dashboards
+    config/      security, properties, initial data
+    model/       MongoDB documents and enums
+    repository/  data access
+    service/     business logic, Resend emails, dashboards
     security/    JWT
-    web/         contrôleurs REST (/api/auth, /api/public, /api/patient, /api/doctor, /api/admin)
+    web/         REST controllers (/api/auth, /api/public, /api/patient, /api/doctor, /api/admin)
 frontend/
   src/app/
-    core/        services API, authentification, thème, toasts, formats
-    ui/          composants (badge, bannière, skeleton, toasts, modale, graphiques, illustrations…)
-    layout/      mise en page publique et espaces connectés
+    core/        API services, authentication, theme, toasts, formatting
+    ui/          components (badge, banner, skeleton, toasts, modal, charts, illustrations…)
+    layout/      public layout and signed-in areas
     pages/       public, auth, patient, doctor, admin, shared
-render.yaml      blueprint Render
+render.yaml      Render blueprint
 ```
 
 ## API
 
-| Préfixe | Accès | Contenu |
+| Prefix | Access | Content |
 |---|---|---|
 | `/api/health` | public | health check |
-| `/api/public/*` | public | infos du cabinet, disponibilités, formulaire de contact |
-| `/api/auth/*` | public / connecté | connexion, inscription, mot de passe oublié, profil |
-| `/api/patient/*` | patient | rendez-vous, messagerie |
-| `/api/doctor/*` | docteur, admin | tableau de bord, patients, agenda, messagerie |
-| `/api/admin/*` | admin | tableau de bord, gestion des utilisateurs |
+| `/api/public/*` | public | clinic info, availability, contact form |
+| `/api/auth/*` | public / signed in | login, sign-up, forgot password, profile |
+| `/api/patient/*` | patient | appointments, messaging |
+| `/api/doctor/*` | doctor, admin | dashboard, patients, agenda, messaging |
+| `/api/admin/*` | admin | dashboard, user management |
 
-Les erreurs sont renvoyées au format `{ status, code, message, fields }`, avec des messages en français.
+Errors are returned as `{ status, code, message, fields }`, with messages in French.
 
-## Sécurité
+## Security
 
-- Mots de passe hachés (BCrypt), jetons JWT signés ; le compte est relu à chaque requête, donc une restriction ou un changement de rôle s'applique immédiatement.
-- Liens d'invitation et de réinitialisation à usage unique, stockés hachés (SHA-256) et limités dans le temps.
-- Les messages envoyés en tant qu'invité ne sont rattachés à un compte qu'après validation de l'adresse par lien email.
-- Limitation de débit sur la connexion, l'inscription, le mot de passe oublié et le formulaire de contact.
-- Contenu saisi par les utilisateurs échappé dans les emails ; notes médicales jamais exposées aux patients.
+- Passwords hashed with BCrypt, signed JWTs; the account is reloaded on every request, so a restriction or role change takes effect immediately.
+- Single-use invitation and password-reset links, stored hashed (SHA-256) and time-limited.
+- Messages sent as a guest are only attached to an account after the email address is verified through an emailed link.
+- Rate limiting on login, sign-up, forgot password and the contact form.
+- User input escaped in emails; medical notes are never exposed to patients.
