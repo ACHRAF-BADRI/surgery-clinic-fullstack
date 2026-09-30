@@ -7,7 +7,7 @@
 ![Render](https://img.shields.io/badge/API-Render-46e3b7?logo=render&logoColor=white)
 ![Cloudflare Pages](https://img.shields.io/badge/Front-Cloudflare%20Pages-f38020?logo=cloudflare&logoColor=white)
 
-**Clinique Éclat** is a full-stack web application for a plastic, aesthetic and reconstructive surgery practice. It combines a public website, online appointment booking, secure messaging, a doctor workspace and account administration.
+**Clinique Badri** is a full-stack web application for a plastic, aesthetic and reconstructive surgery practice. It combines a public website, online appointment booking, secure messaging, a doctor workspace and account administration.
 
 Three roles: **patient**, **doctor**, **admin**. Visitors without an account can browse the site and contact the clinic.
 
@@ -122,13 +122,13 @@ Workers & Pages → **Create → Pages → Connect to Git**:
 
 `public/_redirects` handles single-page app routing and `public/_headers` adds security and cache headers.
 
-Finally, set the Pages URL in `FRONTEND_URL` and `ALLOWED_ORIGINS` on Render (e.g. `https://clinique-eclat.pages.dev,https://*.clinique-eclat.pages.dev` to include preview deployments).
+Finally, set the Pages URL in `FRONTEND_URL` and `ALLOWED_ORIGINS` on Render (e.g. `https://clinique-badri.pages.dev,https://*.clinique-badri.pages.dev` to include preview deployments).
 
 ## Project structure
 
 ```
 backend/
-  src/main/java/com/eclat/clinic/
+  src/main/java/com/badri/clinic/
     config/      security, properties, initial data
     model/       MongoDB documents and enums
     repository/  data access

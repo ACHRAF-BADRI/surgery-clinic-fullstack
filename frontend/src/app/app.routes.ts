@@ -3,14 +3,14 @@ import { guestOnlyGuard, roleGuard } from './core/guards';
 import { AppShellComponent } from './layout/app-shell';
 import { PublicLayoutComponent } from './layout/public-layout';
 
-const T = (t: string) => `${t} · Clinique Éclat`;
+const T = (t: string) => `${t} · Clinique Badri`;
 
 export const routes: Routes = [
   {
     path: '',
     component: PublicLayoutComponent,
     children: [
-      { path: '', title: 'Clinique Éclat — Chirurgie plastique & esthétique', loadComponent: () => import('./pages/public/home').then((m) => m.HomePage) },
+      { path: '', title: 'Clinique Badri — Chirurgie plastique & esthétique', loadComponent: () => import('./pages/public/home').then((m) => m.HomePage) },
       { path: 'interventions', title: T('Interventions'), loadComponent: () => import('./pages/public/procedures').then((m) => m.ProceduresPage) },
       { path: 'contact', title: T('Contact'), loadComponent: () => import('./pages/public/contact').then((m) => m.ContactPage) },
       { path: 'rendez-vous', title: T('Prendre rendez-vous'), loadComponent: () => import('./pages/public/booking').then((m) => m.BookingPage) },

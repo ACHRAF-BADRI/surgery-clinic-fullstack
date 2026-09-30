@@ -30,7 +30,7 @@ management:
         enabled: true
 
 app:
-  clinic-name: ${CLINIC_NAME:Clinique Éclat}
+  clinic-name: ${CLINIC_NAME:Clinique Badri}
   frontend-url: ${FRONTEND_URL:http://localhost:4200}
   allowed-origins: ${ALLOWED_ORIGINS:http://localhost:4200}
   time-zone: ${CLINIC_TIME_ZONE:Europe/Paris}
@@ -39,12 +39,12 @@ app:
     expiration-hours: ${JWT_EXPIRATION_HOURS:72}
   mail:
     resend-api-key: ${RESEND_API_KEY:}
-    from: ${MAIL_FROM:Clinique Éclat <onboarding@resend.dev>}
+    from: ${MAIL_FROM:Clinique Badri <onboarding@resend.dev>}
     doctor-notification-email: ${DOCTOR_NOTIFICATION_EMAIL:}
   seed:
-    admin-email: ${ADMIN_EMAIL:admin@clinique-eclat.fr}
+    admin-email: ${ADMIN_EMAIL:admin@clinique-badri.fr}
     admin-password: ${ADMIN_PASSWORD:Admin#2026}
-    doctor-email: ${DOCTOR_EMAIL:docteur@clinique-eclat.fr}
+    doctor-email: ${DOCTOR_EMAIL:docteur@clinique-badri.fr}
     doctor-password: ${DOCTOR_PASSWORD:Docteur#2026}
     doctor-first-name: ${DOCTOR_FIRST_NAME:Camille}
     doctor-last-name: ${DOCTOR_LAST_NAME:Laurent}

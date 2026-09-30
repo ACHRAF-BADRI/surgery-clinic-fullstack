@@ -11,11 +11,11 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.eclat</groupId>
+    <groupId>com.badri</groupId>
     <artifactId>clinic-api</artifactId>
     <version>1.0.0</version>
     <name>clinic-api</name>
-    <description>API du cabinet de chirurgie plastique</description>
+    <description>Plastic surgery clinic API</description>
 
     <properties>
         <java.version>21</java.version>

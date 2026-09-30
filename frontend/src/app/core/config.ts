@@ -5,13 +5,13 @@ export const API = `${runtimeConfig.apiUrl}/api`;
 
 /** Clinic identity shown in the UI — edit here to customize. */
 export const BRAND = {
-  name: 'Clinique Éclat',
+  name: 'Clinique Badri',
   tagline: 'Chirurgie plastique, esthétique & reconstructrice',
   doctor: 'Dr Camille Laurent',
   doctorTitle: 'Chirurgienne plasticienne — Ancienne cheffe de clinique des Hôpitaux de Paris',
   address: '18 avenue Montaigne, 75008 Paris',
   phone: '01 42 00 00 00',
   phoneHref: '+33142000000',
-  email: 'contact@clinique-eclat.fr',
+  email: 'contact@clinique-badri.fr',
   timeZone: 'Europe/Paris',
 };
