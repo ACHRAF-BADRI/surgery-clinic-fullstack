@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { IconComponent } from '../../ui/icon';
+import { TKey, TranslatePipe } from '../../core/i18n/i18n';
 
 /** Auth pages frame: editorial panel + form card. */
 @Component({
   selector: 'app-auth-frame',
-  imports: [IconComponent],
+  imports: [IconComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     :host { display: block; padding: clamp(24px, 5vw, 64px) 0; }
@@ -36,20 +37,22 @@ import { IconComponent } from '../../ui/icon';
       <div class="wrap">
         <div class="side">
           <div>
-            <span class="eyebrow" style="color: #e6c797">Espace patient</span>
-            <h2 style="margin-top: 14px">Votre parcours, en toute sérénité.</h2>
-            <p>Un espace confidentiel pour gérer vos rendez-vous et échanger avec le cabinet.</p>
+            <span class="eyebrow" style="color: #e6c797">{{ 'auth.frame.eyebrow' | t }}</span>
+            <h2 style="margin-top: 14px">{{ 'auth.frame.title' | t }}</h2>
+            <p>{{ 'auth.frame.text' | t }}</p>
             <ul>
-              <li><app-icon name="calendar-plus" /> Réservation en ligne 24 h/24</li>
-              <li><app-icon name="message" /> Messagerie sécurisée avec le docteur</li>
-              <li><app-icon name="shield-check" /> Données de santé protégées</li>
+              <li><app-icon name="calendar-plus" /> {{ 'auth.frame.f1' | t }}</li>
+              <li><app-icon name="message" /> {{ 'auth.frame.f2' | t }}</li>
+              <li><app-icon name="shield-check" /> {{ 'auth.frame.f3' | t }}</li>
             </ul>
           </div>
           <span class="ring r1"></span><span class="ring r2"></span>
         </div>
         <div class="main">
-          <h1>{{ title() }}</h1>
-          <p class="sub">{{ subtitle() }}</p>
+          <h1>{{ title() | t }}</h1>
+          @if (subtitle()) {
+            <p class="sub">{{ subtitle()! | t }}</p>
+          }
           <ng-content />
         </div>
       </div>
@@ -57,6 +60,6 @@ import { IconComponent } from '../../ui/icon';
   `,
 })
 export class AuthFrameComponent {
-  readonly title = input.required<string>();
-  readonly subtitle = input('');
+  readonly title = input.required<TKey>();
+  readonly subtitle = input<TKey>();
 }

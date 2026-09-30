@@ -21,6 +21,7 @@ import { errorMessage, formatDayLong, formatTime, relativeTime, ymdInZone } from
 import { Message, Thread, ThreadDetail } from '../../core/models';
 import { ToastService } from '../../core/toast.service';
 import { UnreadService } from '../../core/unread.service';
+import { BRAND } from '../../core/config';
 import { AvatarComponent } from '../../ui/avatar';
 import { BadgeComponent } from '../../ui/badge';
 import { BannerComponent } from '../../ui/banner';
@@ -29,6 +30,7 @@ import { FieldErrorComponent } from '../../ui/field-error';
 import { IconComponent } from '../../ui/icon';
 import { ModalComponent } from '../../ui/modal';
 import { SkeletonListComponent } from '../../ui/skeleton';
+import { I18n, TKey, TranslatePipe } from '../../core/i18n/i18n';
 
 type Filter = 'all' | 'unread' | 'open' | 'guest' | 'closed';
 
@@ -36,7 +38,7 @@ type Filter = 'all' | 'unread' | 'open' | 'guest' | 'closed';
   selector: 'app-messages',
   imports: [
     FormsModule, ReactiveFormsModule, RouterLink, AvatarComponent, BadgeComponent, BannerComponent, EmptyStateComponent,
-    IconComponent, SkeletonListComponent, ModalComponent, FieldErrorComponent,
+    IconComponent, SkeletonListComponent, ModalComponent, FieldErrorComponent, TranslatePipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
@@ -93,11 +95,11 @@ type Filter = 'all' | 'unread' | 'open' | 'guest' | 'closed';
   template: `
     <div class="page-head">
       <div>
-        <h1>Messagerie</h1>
-        <p>{{ isDoctor() ? 'Messages des patients et des visiteurs.' : 'Échangez en toute confidentialité avec le cabinet.' }}</p>
+        <h1>{{ 'messages.title' | t }}</h1>
+        <p>{{ (isDoctor() ? 'messages.subtitleDoctor' : 'messages.subtitlePatient') | t }}</p>
       </div>
       @if (!isDoctor()) {
-        <button class="btn btn-primary" (click)="composeOpen.set(true)"><app-icon name="plus" [size]="17" /> Nouveau message</button>
+        <button class="btn btn-primary" (click)="composeOpen.set(true)"><app-icon name="plus" [size]="17" /> {{ 'messages.new' | t }}</button>
       }
     </div>
 
@@ -105,9 +107,9 @@ type Filter = 'all' | 'unread' | 'open' | 'guest' | 'closed';
       <div class="list">
         @if (isDoctor()) {
           <div class="list-head">
-            <div class="segmented" role="tablist" aria-label="Filtrer">
+            <div class="segmented" role="tablist" [attr.aria-label]="'messages.filter' | t">
               @for (f of filters; track f.key) {
-                <button role="tab" [class.active]="filter() === f.key" (click)="setFilter(f.key)">{{ f.label }}</button>
+                <button role="tab" [class.active]="filter() === f.key" (click)="setFilter(f.key)">{{ f.label | t }}</button>
               }
             </div>
           </div>
@@ -116,20 +118,20 @@ type Filter = 'all' | 'unread' | 'open' | 'guest' | 'closed';
           @if (threadsLoading()) {
             <app-skeleton-list [count]="6" [framed]="false" />
           } @else if (threadsError()) {
-            <app-empty-state [compact]="true" illustration="error" title="Chargement impossible" [message]="threadsError()!">
-              <button class="btn btn-sm" (click)="loadThreads()">Réessayer</button>
+            <app-empty-state [compact]="true" illustration="error" [title]="'common.loadError' | t" [message]="threadsError()!">
+              <button class="btn btn-sm" (click)="loadThreads()">{{ 'common.retry' | t }}</button>
             </app-empty-state>
           } @else if (threads().length === 0) {
-            <app-empty-state [compact]="true" illustration="messages" title="Aucune conversation"
-              [message]="isDoctor() ? 'Les nouveaux messages apparaîtront ici.' : 'Posez votre question au docteur, il vous répondra ici.'">
+            <app-empty-state [compact]="true" illustration="messages" [title]="'messages.emptyTitle' | t"
+              [message]="(isDoctor() ? 'messages.emptyDoctor' : 'messages.emptyPatient') | t">
               @if (!isDoctor()) {
-                <button class="btn btn-sm btn-primary" (click)="composeOpen.set(true)">Écrire au docteur</button>
+                <button class="btn btn-sm btn-primary" (click)="composeOpen.set(true)">{{ 'footer.writeDoctor' | t }}</button>
               }
             </app-empty-state>
           } @else {
             @for (t of threads(); track t.id) {
               <a class="thread" [class.active]="t.id === id()" [class.unread]="t.unread > 0" [routerLink]="[base(), t.id]">
-                <app-avatar [name]="isDoctor() ? t.participantName : 'Cabinet'" [size]="40" [muted]="t.status === 'CLOSED'" />
+                <app-avatar [name]="isDoctor() ? t.participantName : BRAND.name" [size]="40" [muted]="t.status === 'CLOSED'" />
                 <div class="info">
                   <div class="top">
                     <span class="name">{{ isDoctor() ? t.participantName : t.subject }}</span>
@@ -142,10 +144,10 @@ type Filter = 'all' | 'unread' | 'open' | 'guest' | 'closed';
                   @if (t.guest || t.status === 'CLOSED') {
                     <div class="tags">
                       @if (t.guest) {
-                        <app-badge tone="warning" size="sm" icon="user-x">Invité</app-badge>
+                        <app-badge tone="warning" size="sm" icon="user-x">{{ 'badges.guest' | t }}</app-badge>
                       }
                       @if (t.status === 'CLOSED') {
-                        <app-badge size="sm" icon="archive">Archivée</app-badge>
+                        <app-badge size="sm" icon="archive">{{ 'badges.archived' | t }}</app-badge>
                       }
                     </div>
                   }
@@ -161,17 +163,16 @@ type Filter = 'all' | 'unread' | 'open' | 'guest' | 'closed';
 
       <div class="conv">
         @if (!id()) {
-          <app-empty-state illustration="messages" title="Sélectionnez une conversation"
-            message="Choisissez un échange dans la liste pour l'afficher." />
+          <app-empty-state illustration="messages" [title]="'messages.selectTitle' | t" [message]="'messages.selectText' | t" />
         } @else if (detailLoading() && !detail()) {
           <div style="padding: 20px"><app-skeleton-list variant="chat" [count]="4" /></div>
         } @else if (detailError()) {
-          <app-empty-state illustration="error" title="Conversation introuvable" [message]="detailError()!">
-            <a class="btn" [routerLink]="base()">Retour à la liste</a>
+          <app-empty-state illustration="error" [title]="'messages.notFound' | t" [message]="detailError()!">
+            <a class="btn" [routerLink]="base()">{{ 'messages.backToList' | t }}</a>
           </app-empty-state>
         } @else if (detail(); as d) {
           <div class="conv-head">
-            <a class="btn btn-ghost btn-icon back" [routerLink]="base()" aria-label="Retour"><app-icon name="arrow-left" /></a>
+            <a class="btn btn-ghost btn-icon back" [routerLink]="base()" [attr.aria-label]="'common.back' | t"><app-icon name="arrow-left" /></a>
             @if (isDoctor()) {
               <app-avatar [name]="d.thread.participantName" [size]="42" />
             }
@@ -179,10 +180,10 @@ type Filter = 'all' | 'unread' | 'open' | 'guest' | 'closed';
               <div class="row" style="--gap: 8px">
                 <h3>{{ isDoctor() ? d.thread.participantName : d.thread.subject }}</h3>
                 @if (d.thread.guest) {
-                  <app-badge tone="warning" size="sm" icon="user-x">Visiteur sans compte</app-badge>
+                  <app-badge tone="warning" size="sm" icon="user-x">{{ 'badges.guestNoAccount' | t }}</app-badge>
                 }
-                @if (d.thread.procedureLabel) {
-                  <app-badge tone="accent" size="sm">{{ d.thread.procedureLabel }}</app-badge>
+                @if (d.thread.procedure) {
+                  <app-badge tone="accent" size="sm">{{ i18n.procedure(d.thread.procedure) }}</app-badge>
                 }
               </div>
               <div class="meta">
@@ -195,20 +196,20 @@ type Filter = 'all' | 'unread' | 'open' | 'guest' | 'closed';
                     <a [href]="'tel:' + d.thread.participantPhone">{{ d.thread.participantPhone }}</a>
                   }
                 } @else {
-                  <span>Conversation avec le cabinet</span>
+                  <span>{{ 'messages.withClinic' | t }}</span>
                 }
               </div>
             </div>
             @if (isDoctor()) {
               <div class="row" style="--gap: 6px">
                 @if (d.thread.patientId) {
-                  <a class="btn btn-sm" [routerLink]="['/cabinet/patients', d.thread.patientId]"><app-icon name="user" [size]="14" /> Dossier</a>
+                  <a class="btn btn-sm" [routerLink]="['/cabinet/patients', d.thread.patientId]"><app-icon name="user" [size]="14" /> {{ 'messages.file' | t }}</a>
                 }
                 <button class="btn btn-sm" (click)="toggleStatus(d.thread)">
                   <app-icon [name]="d.thread.status === 'OPEN' ? 'archive' : 'refresh'" [size]="14" />
-                  {{ d.thread.status === 'OPEN' ? 'Archiver' : 'Rouvrir' }}
+                  {{ (d.thread.status === 'OPEN' ? 'messages.archive' : 'messages.reopen') | t }}
                 </button>
-                <button class="btn btn-sm btn-danger btn-icon" (click)="remove(d.thread)" title="Supprimer" aria-label="Supprimer la conversation">
+                <button class="btn btn-sm btn-danger btn-icon" (click)="remove(d.thread)" [title]="'common.delete' | t" [attr.aria-label]="'messages.deleteThread' | t">
                   <app-icon name="trash" [size]="14" />
                 </button>
               </div>
@@ -233,14 +234,14 @@ type Filter = 'all' | 'unread' | 'open' | 'guest' | 'closed';
           @if (isDoctor() && d.thread.guest) {
             <div style="padding: 10px 12px 0; background: var(--surface)">
               <app-banner tone="info" icon="mail">
-                Ce visiteur n'a pas de compte : votre réponse lui sera envoyée par email à {{ d.thread.participantEmail }}.
+                {{ 'messages.guestReplyInfo' | t: { email: d.thread.participantEmail } }}
               </app-banner>
             </div>
           }
           <form class="composer" (ngSubmit)="send()">
-            <textarea class="textarea" name="reply" [(ngModel)]="reply" rows="1" placeholder="Écrire une réponse…  (Ctrl + Entrée pour envoyer)"
-              (keydown.control.enter)="send()" (keydown.meta.enter)="send()" maxlength="5000" aria-label="Votre message"></textarea>
-            <button class="btn btn-primary btn-icon" type="submit" [class.is-loading]="sending()" [disabled]="sending() || !reply().trim()" aria-label="Envoyer">
+            <textarea class="textarea" name="reply" [(ngModel)]="reply" rows="1" [placeholder]="'messages.replyPlaceholder' | t"
+              (keydown.control.enter)="send()" (keydown.meta.enter)="send()" maxlength="5000" [attr.aria-label]="'messages.yourMessage' | t"></textarea>
+            <button class="btn btn-primary btn-icon" type="submit" [class.is-loading]="sending()" [disabled]="sending() || !reply().trim()" [attr.aria-label]="'common.send' | t">
               <app-icon name="send" [size]="17" />
             </button>
           </form>
@@ -248,32 +249,32 @@ type Filter = 'all' | 'unread' | 'open' | 'guest' | 'closed';
       </div>
     </div>
 
-    <app-modal [open]="composeOpen()" title="Nouveau message" subtitle="Le docteur sera notifié par email." (closed)="composeOpen.set(false)">
+    <app-modal [open]="composeOpen()" [title]="'messages.new' | t" [subtitle]="'messages.newSubtitle' | t" (closed)="composeOpen.set(false)">
       <form class="stack" style="--gap: 16px" [formGroup]="compose" (ngSubmit)="createThread()" id="compose-form" novalidate>
         <div class="field">
-          <label class="label" for="c-subject">Sujet <span class="req">*</span></label>
+          <label class="label" for="c-subject">{{ 'contact.subject' | t }} <span class="req">*</span></label>
           <input id="c-subject" class="input" formControlName="subject" />
-          <app-field-error [control]="compose.controls.subject" label="Le sujet" />
+          <app-field-error [control]="compose.controls.subject" />
         </div>
         <div class="field">
-          <label class="label" for="c-proc">Intervention concernée</label>
+          <label class="label" for="c-proc">{{ 'contact.procedure' | t }}</label>
           <select id="c-proc" class="select" formControlName="procedure">
-            <option value="">— Aucune —</option>
+            <option value="">{{ 'common.none' | t }}</option>
             @for (p of procedures(); track p.code) {
-              <option [value]="p.code">{{ p.label }}</option>
+              <option [value]="p.code">{{ i18n.procedure(p.code) }}</option>
             }
           </select>
         </div>
         <div class="field">
-          <label class="label" for="c-body">Message <span class="req">*</span></label>
+          <label class="label" for="c-body">{{ 'contact.message' | t }} <span class="req">*</span></label>
           <textarea id="c-body" class="textarea" formControlName="body" rows="5"></textarea>
-          <app-field-error [control]="compose.controls.body" label="Le message" />
+          <app-field-error [control]="compose.controls.body" />
         </div>
       </form>
       <ng-container footer>
-        <button class="btn btn-ghost" type="button" (click)="composeOpen.set(false)">Annuler</button>
+        <button class="btn btn-ghost" type="button" (click)="composeOpen.set(false)">{{ 'common.cancel' | t }}</button>
         <button class="btn btn-primary" type="submit" form="compose-form" [class.is-loading]="sending()" [disabled]="sending()">
-          <app-icon name="send" [size]="15" /> Envoyer
+          <app-icon name="send" [size]="15" /> {{ 'common.send' | t }}
         </button>
       </ng-container>
     </app-modal>
@@ -293,13 +294,15 @@ export class MessagesPage {
 
   protected readonly isDoctor = computed(() => this.mode() === 'doctor');
   protected readonly base = computed(() => (this.isDoctor() ? '/cabinet/messages' : '/espace/messages'));
-  protected readonly filters: { key: Filter; label: string }[] = [
-    { key: 'all', label: 'Toutes' },
-    { key: 'unread', label: 'Non lues' },
-    { key: 'open', label: 'Ouvertes' },
-    { key: 'guest', label: 'Invités' },
-    { key: 'closed', label: 'Archivées' },
+  protected readonly filters: { key: Filter; label: TKey }[] = [
+    { key: 'all', label: 'messages.filters.all' },
+    { key: 'unread', label: 'messages.filters.unread' },
+    { key: 'open', label: 'messages.filters.open' },
+    { key: 'guest', label: 'messages.filters.guest' },
+    { key: 'closed', label: 'messages.filters.closed' },
   ];
+  protected readonly i18n = inject(I18n);
+  protected readonly BRAND = BRAND;
   protected readonly filter = signal<Filter>('all');
   protected readonly threads = signal<Thread[]>([]);
   protected readonly threadsLoading = signal(true);
@@ -406,11 +409,11 @@ export class MessagesPage {
         this.detail.set(d);
         this.scrollDown();
         this.upsertThread(d.thread);
-        if (this.isDoctor() && d.thread.guest) this.toast.success('Réponse envoyée', `Un email a été envoyé à ${d.thread.participantEmail}.`);
+        if (this.isDoctor() && d.thread.guest) this.toast.success(this.i18n.t('messages.toastReplySent'), this.i18n.t('messages.toastReplySentText', { email: d.thread.participantEmail }));
       },
       error: (e) => {
         this.sending.set(false);
-        this.toast.error("Message non envoyé", errorMessage(e));
+        this.toast.error(this.i18n.t('messages.toastNotSent'), errorMessage(e));
       },
     });
   }
@@ -428,12 +431,12 @@ export class MessagesPage {
         this.composeOpen.set(false);
         this.compose.reset();
         this.upsertThread(d.thread);
-        this.toast.success('Message envoyé', 'Le docteur a été notifié.');
+        this.toast.success(this.i18n.t('contact.sentTitle'), this.i18n.t('contact.toastDoctorNotified'));
         this.router.navigate([this.base(), d.thread.id]);
       },
       error: (e) => {
         this.sending.set(false);
-        this.toast.error('Envoi impossible', errorMessage(e));
+        this.toast.error(this.i18n.t('auth.forgot.toastError'), errorMessage(e));
       },
     });
   }
@@ -444,27 +447,27 @@ export class MessagesPage {
       next: (updated) => {
         this.detail.update((d) => (d ? { ...d, thread: updated } : d));
         this.upsertThread(updated);
-        this.toast.success(status === 'CLOSED' ? 'Conversation archivée' : 'Conversation rouverte');
+        this.toast.success(this.i18n.t(status === 'CLOSED' ? 'messages.toastArchived' : 'messages.toastReopened'));
       },
-      error: (e) => this.toast.error('Action impossible', errorMessage(e)),
+      error: (e) => this.toast.error(this.i18n.t('common.actionError'), errorMessage(e)),
     });
   }
 
   async remove(t: Thread) {
     const ok = await this.confirm.confirm({
-      title: 'Supprimer cette conversation ?',
-      message: 'Tous les messages seront définitivement supprimés.',
-      confirmLabel: 'Supprimer',
+      title: this.i18n.t('messages.deleteTitle'),
+      message: this.i18n.t('messages.deleteText'),
+      confirmLabel: this.i18n.t('common.delete'),
       tone: 'danger',
     });
     if (!ok) return;
     this.doctorApi.deleteThread(t.id).subscribe({
       next: () => {
         this.threads.update((l) => l.filter((x) => x.id !== t.id));
-        this.toast.success('Conversation supprimée');
+        this.toast.success(this.i18n.t('messages.toastDeleted'));
         this.router.navigateByUrl(this.base());
       },
-      error: (e) => this.toast.error('Suppression impossible', errorMessage(e)),
+      error: (e) => this.toast.error(this.i18n.t('common.deleteError'), errorMessage(e)),
     });
   }
 

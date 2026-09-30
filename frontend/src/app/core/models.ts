@@ -117,7 +117,8 @@ export interface ClinicInfo {
   doctors: { id: string; name: string }[];
   procedures: Procedure[];
   appointmentTypes: AppointmentTypeInfo[];
-  openingHours: { day: string; hours: string }[];
+  /** day = MONDAY…SUNDAY; open/close = "HH:mm", absent when closed. */
+  openingHours: { day: string; open?: string; close?: string }[];
 }
 
 export interface Thread {
@@ -197,5 +198,6 @@ export interface ApiError {
   status: number;
   code: string;
   message: string;
+  detail?: string;
   fields?: Record<string, string>;
 }

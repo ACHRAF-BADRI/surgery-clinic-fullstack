@@ -9,77 +9,78 @@ import { BannerComponent } from '../../ui/banner';
 import { FieldErrorComponent } from '../../ui/field-error';
 import { IconComponent } from '../../ui/icon';
 import { ModalComponent } from '../../ui/modal';
+import { I18n, TranslatePipe } from '../../core/i18n/i18n';
 
 /** Creation (without account) or edit of a patient record by the doctor. */
 @Component({
   selector: 'app-patient-form-modal',
-  imports: [ReactiveFormsModule, ModalComponent, FieldErrorComponent, IconComponent, BannerComponent],
+  imports: [ReactiveFormsModule, ModalComponent, FieldErrorComponent, IconComponent, BannerComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <app-modal [open]="open()" [title]="patient() ? 'Modifier le dossier' : 'Nouveau patient'" width="680px"
-      [subtitle]="patient() ? '' : 'Le dossier est créé sans compte : le patient pourra être invité plus tard.'" (closed)="closed.emit()">
+    <app-modal [open]="open()" [title]="(patient() ? 'patientForm.editTitle' : 'patients.new') | t" width="680px"
+      [subtitle]="patient() ? '' : ('patientForm.createSubtitle' | t)" (closed)="closed.emit()">
       @if (!patient()) {
         <app-banner tone="warning" icon="user-x" style="display: block; margin-bottom: 18px">
-          Ce patient sera marqué <strong>« Sans compte »</strong>. Ajoutez son email pour pouvoir l'inviter à créer son espace.
+          {{ 'patientForm.noAccountInfo' | t }}
         </app-banner>
       }
       <form id="patient-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
         <div class="form-grid">
           <div class="field">
-            <label class="label" for="pf-first">Prénom <span class="req">*</span></label>
+            <label class="label" for="pf-first">{{ 'common.firstName' | t }} <span class="req">*</span></label>
             <input id="pf-first" class="input" formControlName="firstName" />
-            <app-field-error [control]="form.controls.firstName" label="Le prénom" />
+            <app-field-error [control]="form.controls.firstName" />
           </div>
           <div class="field">
-            <label class="label" for="pf-last">Nom <span class="req">*</span></label>
+            <label class="label" for="pf-last">{{ 'common.lastName' | t }} <span class="req">*</span></label>
             <input id="pf-last" class="input" formControlName="lastName" />
-            <app-field-error [control]="form.controls.lastName" label="Le nom" />
+            <app-field-error [control]="form.controls.lastName" />
           </div>
           <div class="field">
-            <label class="label" for="pf-email">Email @if (patient()?.hasAccount) {<span class="req">*</span>}</label>
+            <label class="label" for="pf-email">{{ 'common.email' | t }} @if (patient()?.hasAccount) {<span class="req">*</span>}</label>
             <input id="pf-email" class="input" type="email" formControlName="email" />
-            <app-field-error [control]="form.controls.email" label="L'email" />
+            <app-field-error [control]="form.controls.email" />
           </div>
           <div class="field">
-            <label class="label" for="pf-phone">Téléphone</label>
+            <label class="label" for="pf-phone">{{ 'common.phone' | t }}</label>
             <input id="pf-phone" class="input" type="tel" formControlName="phone" />
             <app-field-error [control]="form.controls.phone" />
           </div>
           <div class="field">
-            <label class="label" for="pf-dob">Date de naissance</label>
+            <label class="label" for="pf-dob">{{ 'common.dateOfBirth' | t }}</label>
             <input id="pf-dob" class="input" type="date" formControlName="dateOfBirth" />
           </div>
           <div class="field">
-            <label class="label" for="pf-gender">Genre</label>
+            <label class="label" for="pf-gender">{{ 'common.gender' | t }}</label>
             <select id="pf-gender" class="select" formControlName="gender">
-              <option value="">— Non précisé —</option>
-              <option value="F">Femme</option>
-              <option value="M">Homme</option>
-              <option value="X">Autre</option>
+              <option value="">{{ 'common.genderUnset' | t }}</option>
+              <option value="F">{{ 'common.genderF' | t }}</option>
+              <option value="M">{{ 'common.genderM' | t }}</option>
+              <option value="X">{{ 'common.genderX' | t }}</option>
             </select>
           </div>
           <div class="field full">
-            <label class="label" for="pf-address">Adresse</label>
+            <label class="label" for="pf-address">{{ 'common.address' | t }}</label>
             <input id="pf-address" class="input" formControlName="address" />
           </div>
           <div class="field">
-            <label class="label" for="pf-zip">Code postal</label>
+            <label class="label" for="pf-zip">{{ 'common.postalCode' | t }}</label>
             <input id="pf-zip" class="input" formControlName="postalCode" />
           </div>
           <div class="field">
-            <label class="label" for="pf-city">Ville</label>
+            <label class="label" for="pf-city">{{ 'common.city' | t }}</label>
             <input id="pf-city" class="input" formControlName="city" />
           </div>
           <div class="field full">
-            <label class="label" for="pf-notes">Notes médicales (privées)</label>
-            <textarea id="pf-notes" class="textarea" formControlName="medicalNotes" placeholder="Antécédents, allergies, traitements… Jamais visibles par le patient."></textarea>
+            <label class="label" for="pf-notes">{{ 'patientForm.notes' | t }}</label>
+            <textarea id="pf-notes" class="textarea" formControlName="medicalNotes" [placeholder]="'patientForm.notesPlaceholder' | t"></textarea>
           </div>
         </div>
       </form>
       <ng-container footer>
-        <button class="btn btn-ghost" type="button" (click)="closed.emit()">Annuler</button>
+        <button class="btn btn-ghost" type="button" (click)="closed.emit()">{{ 'common.cancel' | t }}</button>
         <button class="btn btn-primary" type="submit" form="patient-form" [class.is-loading]="saving()" [disabled]="saving()">
-          <app-icon name="check" [size]="16" /> {{ patient() ? 'Enregistrer' : 'Créer le dossier' }}
+          <app-icon name="check" [size]="16" /> {{ (patient() ? 'common.save' : 'patientForm.create') | t }}
         </button>
       </ng-container>
     </app-modal>
@@ -88,6 +89,7 @@ import { ModalComponent } from '../../ui/modal';
 export class PatientFormModalComponent {
   private api = inject(DoctorApi);
   private toast = inject(ToastService);
+  private i18n = inject(I18n);
   readonly open = input(false);
   readonly patient = input<Patient | null>(null);
   readonly saved = output<Patient>();
@@ -143,13 +145,13 @@ export class PatientFormModalComponent {
     (p ? this.api.updatePatient(p.id, body) : this.api.createPatient(body)).subscribe({
       next: (res) => {
         this.saving.set(false);
-        this.toast.success(p ? 'Dossier mis à jour' : 'Patient créé', p ? undefined : `${res.firstName} ${res.lastName} a été ajouté(e) sans compte.`);
+        this.toast.success(this.i18n.t(p ? 'patientForm.toastUpdated' : 'patientForm.toastCreated'), p ? undefined : this.i18n.t('patientForm.toastCreatedText', { name: `${res.firstName} ${res.lastName}` }));
         this.saved.emit(res);
       },
       error: (e) => {
         this.saving.set(false);
         applyServerErrors(this.form, e);
-        this.toast.error('Enregistrement impossible', errorMessage(e));
+        this.toast.error(this.i18n.t('common.saveError'), errorMessage(e));
       },
     });
   }

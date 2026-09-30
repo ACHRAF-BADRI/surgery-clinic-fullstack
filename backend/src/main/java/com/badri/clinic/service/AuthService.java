@@ -56,7 +56,8 @@ public class AuthService {
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "BAD_CREDENTIALS", "Email ou mot de passe incorrect."));
         if (u.getStatus() == AccountStatus.RESTRICTED) {
             String reason = u.getRestrictionReason() == null ? "" : " Motif : " + u.getRestrictionReason();
-            throw ApiException.forbidden("ACCOUNT_RESTRICTED", "Votre compte est restreint. Contactez le cabinet." + reason);
+            throw ApiException.forbidden("ACCOUNT_RESTRICTED", "Votre compte est restreint. Contactez le cabinet." + reason)
+                    .withDetail(u.getRestrictionReason());
         }
         u.setLastLoginAt(Instant.now());
         users.save(u);

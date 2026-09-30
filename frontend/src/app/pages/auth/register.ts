@@ -10,10 +10,11 @@ import { BannerComponent } from '../../ui/banner';
 import { FieldErrorComponent } from '../../ui/field-error';
 import { IconComponent } from '../../ui/icon';
 import { AuthFrameComponent } from './auth-frame';
+import { I18n, TranslatePipe } from '../../core/i18n/i18n';
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, RouterLink, AuthFrameComponent, FieldErrorComponent, IconComponent, BannerComponent],
+  imports: [ReactiveFormsModule, RouterLink, AuthFrameComponent, FieldErrorComponent, IconComponent, BannerComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     .meter { display: flex; gap: 4px; margin-top: 4px; }
@@ -24,63 +25,63 @@ import { AuthFrameComponent } from './auth-frame';
     .meter.s4 span { background: var(--success); }
   `,
   template: `
-    <app-auth-frame title="Créer mon espace patient" subtitle="Quelques informations pour vous connaître.">
+    <app-auth-frame title="auth.register.title" subtitle="auth.register.subtitle">
       @if (fileExists()) {
-        <app-banner tone="info" title="Vous êtes déjà suivi(e) au cabinet" style="display: block; margin-bottom: 20px">
-          Un dossier existe déjà à cette adresse. Recevez un lien par email pour activer votre compte.
-          <div actions><a class="btn btn-primary btn-sm" routerLink="/mot-de-passe-oublie" [queryParams]="{ email: form.controls.email.value }">Activer mon compte</a></div>
+        <app-banner tone="info" [title]="'auth.register.fileExistsTitle' | t" style="display: block; margin-bottom: 20px">
+          {{ 'auth.register.fileExistsText' | t }}
+          <div actions><a class="btn btn-primary btn-sm" routerLink="/mot-de-passe-oublie" [queryParams]="{ email: form.controls.email.value }">{{ 'auth.register.activate' | t }}</a></div>
         </app-banner>
       }
       <form class="stack" style="--gap: 18px" [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <div class="form-grid">
           <div class="field">
-            <label class="label" for="firstName">Prénom <span class="req">*</span></label>
+            <label class="label" for="firstName">{{ 'common.firstName' | t }} <span class="req">*</span></label>
             <input id="firstName" class="input" formControlName="firstName" autocomplete="given-name" />
-            <app-field-error [control]="form.controls.firstName" label="Le prénom" />
+            <app-field-error [control]="form.controls.firstName" />
           </div>
           <div class="field">
-            <label class="label" for="lastName">Nom <span class="req">*</span></label>
+            <label class="label" for="lastName">{{ 'common.lastName' | t }} <span class="req">*</span></label>
             <input id="lastName" class="input" formControlName="lastName" autocomplete="family-name" />
-            <app-field-error [control]="form.controls.lastName" label="Le nom" />
+            <app-field-error [control]="form.controls.lastName" />
           </div>
           <div class="field">
-            <label class="label" for="email">Email <span class="req">*</span></label>
+            <label class="label" for="email">{{ 'common.email' | t }} <span class="req">*</span></label>
             <input id="email" class="input" type="email" formControlName="email" autocomplete="email" />
-            <app-field-error [control]="form.controls.email" label="L'email" />
+            <app-field-error [control]="form.controls.email" />
           </div>
           <div class="field">
-            <label class="label" for="phone">Téléphone</label>
+            <label class="label" for="phone">{{ 'common.phone' | t }}</label>
             <input id="phone" class="input" type="tel" formControlName="phone" autocomplete="tel" />
             <app-field-error [control]="form.controls.phone" />
           </div>
           <div class="field">
-            <label class="label" for="dob">Date de naissance</label>
+            <label class="label" for="dob">{{ 'common.dateOfBirth' | t }}</label>
             <input id="dob" class="input" type="date" formControlName="dateOfBirth" [max]="today" />
           </div>
           <div class="field">
-            <label class="label" for="password">Mot de passe <span class="req">*</span></label>
+            <label class="label" for="password">{{ 'common.password' | t }} <span class="req">*</span></label>
             <input id="password" class="input" type="password" formControlName="password" autocomplete="new-password" />
             <div class="meter" [class]="'s' + strength()" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-            <app-field-error [control]="form.controls.password" label="Le mot de passe" />
+            <app-field-error [control]="form.controls.password" />
           </div>
           <div class="field full">
-            <label class="label" for="confirm">Confirmer le mot de passe <span class="req">*</span></label>
+            <label class="label" for="confirm">{{ 'auth.register.confirmPassword' | t }} <span class="req">*</span></label>
             <input id="confirm" class="input" type="password" formControlName="confirm" autocomplete="new-password" />
-            <app-field-error [control]="form.controls.confirm" label="La confirmation" />
+            <app-field-error [control]="form.controls.confirm" />
           </div>
         </div>
         <label class="check">
           <input type="checkbox" formControlName="consent" />
-          J'accepte que mes données soient traitées par le cabinet pour la gestion de mon suivi.
+          {{ 'auth.register.consent' | t }}
         </label>
         @if (form.controls.consent.touched && !form.controls.consent.value) {
-          <span class="field-error">Votre consentement est nécessaire pour créer un compte.</span>
+          <span class="field-error">{{ 'auth.register.consentRequired' | t }}</span>
         }
         <button class="btn btn-primary btn-lg btn-block" type="submit" [class.is-loading]="loading()" [disabled]="loading()">
-          Créer mon compte <app-icon name="arrow-right" [size]="16" />
+          {{ 'auth.register.submit' | t }} <app-icon name="arrow-right" [size]="16" />
         </button>
         <p class="muted" style="text-align: center; font-size: .9rem">
-          Déjà inscrit(e) ? <a class="link" routerLink="/connexion" [queryParams]="{ returnUrl: returnUrl() }">Se connecter</a>
+          {{ 'auth.register.already' | t }} <a class="link" routerLink="/connexion" [queryParams]="{ returnUrl: returnUrl() }">{{ 'auth.login.submit' | t }}</a>
         </p>
       </form>
     </app-auth-frame>
@@ -90,6 +91,7 @@ export class RegisterPage {
   private auth = inject(AuthService);
   private router = inject(Router);
   private toast = inject(ToastService);
+  protected readonly i18n = inject(I18n);
   readonly returnUrl = input<string>();
   protected readonly loading = signal(false);
   protected readonly fileExists = signal(false);
@@ -140,7 +142,7 @@ export class RegisterPage {
       })
       .subscribe({
         next: (r) => {
-          this.toast.success(`Bienvenue ${r.user.firstName} !`, 'Votre espace patient est prêt.');
+          this.toast.success(this.i18n.t('auth.register.toastWelcome', { name: r.user.firstName }), this.i18n.t('auth.register.toastReady'));
           const target = this.returnUrl();
           this.router.navigateByUrl(target && target.startsWith('/') && !target.startsWith('//') ? target : this.auth.homeFor(r.user.role));
         },
@@ -148,7 +150,7 @@ export class RegisterPage {
           this.loading.set(false);
           applyServerErrors(this.form, e);
           if (errorCode(e) === 'PATIENT_FILE_EXISTS') this.fileExists.set(true);
-          else this.toast.error('Inscription impossible', errorMessage(e));
+          else this.toast.error(this.i18n.t('auth.register.toastError'), errorMessage(e));
         },
       });
   }

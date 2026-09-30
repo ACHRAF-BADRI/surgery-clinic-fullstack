@@ -2,17 +2,17 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { EmptyStateComponent } from '../../ui/empty-state';
 import { IconComponent } from '../../ui/icon';
+import { TranslatePipe } from '../../core/i18n/i18n';
 
 @Component({
   selector: 'app-not-found',
-  imports: [EmptyStateComponent, RouterLink, IconComponent],
+  imports: [EmptyStateComponent, RouterLink, IconComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="section container">
-      <app-empty-state illustration="notfound" title="Cette page s'est égarée"
-        message="La page que vous cherchez n'existe pas ou a été déplacée. Revenons en terrain connu.">
-        <a class="btn btn-primary" routerLink="/"><app-icon name="arrow-left" [size]="16" /> Retour à l'accueil</a>
-        <a class="btn" routerLink="/rendez-vous">Prendre rendez-vous</a>
+      <app-empty-state illustration="notfound" [title]="'notFound.title' | t" [message]="'notFound.message' | t">
+        <a class="btn btn-primary" routerLink="/"><app-icon name="arrow-left" [size]="16" /> {{ 'notFound.home' | t }}</a>
+        <a class="btn" routerLink="/rendez-vous">{{ 'nav.book' | t }}</a>
       </app-empty-state>
     </section>
   `,

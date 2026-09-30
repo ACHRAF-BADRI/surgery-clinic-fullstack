@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, model, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DoctorApi } from '../../core/api';
-import { errorMessage, todayYmd, zonedToInstant } from '../../core/format';
+import { errorMessage, formatTime, todayYmd, zonedToInstant } from '../../core/format';
 import { AppointmentType, Slot } from '../../core/models';
+import { TranslatePipe } from '../../core/i18n/i18n';
 import { EmptyStateComponent } from '../../ui/empty-state';
 import { SkeletonComponent } from '../../ui/skeleton';
 
@@ -12,7 +13,7 @@ import { SkeletonComponent } from '../../ui/skeleton';
  */
 @Component({
   selector: 'app-slot-picker',
-  imports: [FormsModule, SkeletonComponent, EmptyStateComponent],
+  imports: [FormsModule, SkeletonComponent, EmptyStateComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     .slots { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); }
@@ -27,22 +28,22 @@ import { SkeletonComponent } from '../../ui/skeleton';
     <div class="stack" style="--gap: 14px">
       <div class="form-grid">
         <div class="field">
-          <label class="label" for="sp-date">Date</label>
+          <label class="label" for="sp-date">{{ 'booking.summaryDate' | t }}</label>
           <input id="sp-date" class="input" type="date" [min]="today" [ngModel]="date()" (ngModelChange)="date.set($event)" />
         </div>
         <div class="field" style="justify-content: flex-end">
           <div class="segmented">
-            <button type="button" [class.active]="!custom()" (click)="setCustom(false)">Créneaux libres</button>
-            <button type="button" [class.active]="custom()" (click)="setCustom(true)">Horaire libre</button>
+            <button type="button" [class.active]="!custom()" (click)="setCustom(false)">{{ 'slotPicker.free' | t }}</button>
+            <button type="button" [class.active]="custom()" (click)="setCustom(true)">{{ 'slotPicker.custom' | t }}</button>
           </div>
         </div>
       </div>
 
       @if (custom()) {
         <div class="field" style="max-width: 200px">
-          <label class="label" for="sp-time">Heure</label>
+          <label class="label" for="sp-time">{{ 'booking.summaryTime' | t }}</label>
           <input id="sp-time" class="input" type="time" step="300" [ngModel]="time()" (ngModelChange)="setTime($event)" />
-          <span class="field-hint">Hors grille horaire, sous votre responsabilité.</span>
+          <span class="field-hint">{{ 'slotPicker.customHint' | t }}</span>
         </div>
       } @else if (loading()) {
         <div class="slots">
@@ -53,12 +54,11 @@ import { SkeletonComponent } from '../../ui/skeleton';
       } @else if (error()) {
         <p class="field-error">{{ error() }}</p>
       } @else if (slots().length === 0) {
-        <app-empty-state [compact]="true" illustration="calendar" title="Aucun créneau libre"
-          message="Choisissez une autre date ou passez en « Horaire libre »." />
+        <app-empty-state [compact]="true" illustration="calendar" [title]="'slotPicker.none' | t" [message]="'slotPicker.noneText' | t" />
       } @else {
         <div class="slots">
           @for (s of slots(); track s.startAt) {
-            <button type="button" class="slot" [class.sel]="value() === s.startAt" (click)="value.set(s.startAt)">{{ s.label }}</button>
+            <button type="button" class="slot" [class.sel]="value() === s.startAt" (click)="value.set(s.startAt)">{{ fmtTime(s.startAt) }}</button>
           }
         </div>
       }
@@ -74,6 +74,7 @@ export class SlotPickerComponent {
   readonly value = model<string | null>(null);
 
   protected readonly today = todayYmd();
+  protected readonly fmtTime = formatTime;
   protected readonly custom = signal(false);
   protected readonly time = signal('09:00');
   protected readonly slots = signal<Slot[]>([]);

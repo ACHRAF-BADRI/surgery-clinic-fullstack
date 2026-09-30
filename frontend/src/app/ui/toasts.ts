@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ToastKind, ToastService } from '../core/toast.service';
 import { IconComponent } from './icon';
+import { TranslatePipe } from '../core/i18n/i18n';
 
 const ICONS: Record<ToastKind, string> = {
   success: 'check-circle',
@@ -12,7 +13,7 @@ const ICONS: Record<ToastKind, string> = {
 /** Toast stack: springy entrance, progress bar, pause on hover, swipe to dismiss. */
 @Component({
   selector: 'app-toasts',
-  imports: [IconComponent],
+  imports: [IconComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     :host {
@@ -102,7 +103,7 @@ const ICONS: Record<ToastKind, string> = {
             <button class="action" type="button" (click)="t.action.run(); toasts.dismiss(t.id)">{{ t.action.label }}</button>
           }
         </div>
-        <button class="close" type="button" (click)="toasts.dismiss(t.id)" aria-label="Fermer la notification">
+        <button class="close" type="button" (click)="toasts.dismiss(t.id)" [attr.aria-label]="'common.closeNotification' | t">
           <app-icon name="x" [size]="15" />
         </button>
         @if (t.duration > 0) {

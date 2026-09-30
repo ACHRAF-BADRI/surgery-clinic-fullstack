@@ -11,10 +11,11 @@ import { BannerComponent } from '../../ui/banner';
 import { EmptyStateComponent } from '../../ui/empty-state';
 import { IconComponent } from '../../ui/icon';
 import { SkeletonListComponent } from '../../ui/skeleton';
+import { I18n, TranslatePipe } from '../../core/i18n/i18n';
 
 @Component({
   selector: 'app-my-appointments',
-  imports: [RouterLink, AppointmentItemComponent, EmptyStateComponent, SkeletonListComponent, IconComponent, BannerComponent],
+  imports: [RouterLink, AppointmentItemComponent, EmptyStateComponent, SkeletonListComponent, IconComponent, BannerComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     .list { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); overflow: hidden; }
@@ -24,15 +25,15 @@ import { SkeletonListComponent } from '../../ui/skeleton';
   template: `
     <div class="page-head">
       <div>
-        <h1>Bonjour {{ auth.user()?.firstName }}</h1>
-        <p>Retrouvez vos rendez-vous passés et à venir.</p>
+        <h1>{{ 'myAppointments.hello' | t: { name: auth.user()?.firstName } }}</h1>
+        <p>{{ 'myAppointments.subtitle' | t }}</p>
       </div>
-      <a class="btn btn-primary" routerLink="/rendez-vous"><app-icon name="calendar-plus" [size]="17" /> Nouveau rendez-vous</a>
+      <a class="btn btn-primary" routerLink="/rendez-vous"><app-icon name="calendar-plus" [size]="17" /> {{ 'myAppointments.new' | t }}</a>
     </div>
 
     @if (pendingCount() > 0) {
-      <app-banner tone="warning" title="Demande en attente de confirmation" icon="clock" [dismissible]="true" style="display: block; margin-bottom: 20px">
-        {{ pendingCount() }} demande(s) en attente. Vous recevrez un email dès que le cabinet l'aura confirmée.
+      <app-banner tone="warning" [title]="'myAppointments.pendingTitle' | t" icon="clock" [dismissible]="true" style="display: block; margin-bottom: 20px">
+        {{ 'myAppointments.pendingText' | t: { n: pendingCount() } }}
       </app-banner>
     }
 
@@ -40,24 +41,23 @@ import { SkeletonListComponent } from '../../ui/skeleton';
       <app-skeleton-list [count]="4" [avatar]="false" />
     } @else if (error()) {
       <div class="card">
-        <app-empty-state illustration="error" title="Impossible de charger vos rendez-vous" [message]="error()!">
-          <button class="btn btn-primary" (click)="load()"><app-icon name="refresh" [size]="16" /> Réessayer</button>
+        <app-empty-state illustration="error" [title]="'myAppointments.loadError' | t" [message]="error()!">
+          <button class="btn btn-primary" (click)="load()"><app-icon name="refresh" [size]="16" /> {{ 'common.retry' | t }}</button>
         </app-empty-state>
       </div>
     } @else if (appointments().length === 0) {
       <div class="card">
-        <app-empty-state illustration="calendar" title="Aucun rendez-vous pour le moment"
-          message="Réservez votre première consultation en ligne en quelques clics.">
-          <a class="btn btn-primary" routerLink="/rendez-vous">Prendre rendez-vous</a>
-          <a class="btn" routerLink="/interventions">Découvrir les interventions</a>
+        <app-empty-state illustration="calendar" [title]="'myAppointments.emptyTitle' | t" [message]="'myAppointments.emptyText' | t">
+          <a class="btn btn-primary" routerLink="/rendez-vous">{{ 'nav.book' | t }}</a>
+          <a class="btn" routerLink="/interventions">{{ 'myAppointments.discover' | t }}</a>
         </app-empty-state>
       </div>
     } @else {
-      <h2 class="sub" style="margin-top: 0">À venir</h2>
+      <h2 class="sub" style="margin-top: 0">{{ 'myAppointments.upcoming' | t }}</h2>
       @if (upcoming().length === 0) {
         <div class="card">
-          <app-empty-state [compact]="true" illustration="calendar" title="Rien de prévu" message="Aucun rendez-vous à venir.">
-            <a class="btn btn-sm btn-primary" routerLink="/rendez-vous">Réserver</a>
+          <app-empty-state [compact]="true" illustration="calendar" [title]="'myAppointments.nothingTitle' | t" [message]="'myAppointments.nothingText' | t">
+            <a class="btn btn-sm btn-primary" routerLink="/rendez-vous">{{ 'myAppointments.bookShort' | t }}</a>
           </app-empty-state>
         </div>
       } @else {
@@ -66,7 +66,7 @@ import { SkeletonListComponent } from '../../ui/skeleton';
             <app-appointment-item [appointment]="a">
               @if (a.status === 'PENDING' || a.status === 'CONFIRMED') {
                 <button class="btn btn-sm btn-danger" [class.is-loading]="busy() === a.id" (click)="cancel(a)">
-                  <app-icon name="x" [size]="14" /> Annuler
+                  <app-icon name="x" [size]="14" /> {{ 'common.cancel' | t }}
                 </button>
               }
             </app-appointment-item>
@@ -75,7 +75,7 @@ import { SkeletonListComponent } from '../../ui/skeleton';
       }
 
       @if (past().length) {
-        <h2 class="sub">Historique</h2>
+        <h2 class="sub">{{ 'myAppointments.history' | t }}</h2>
         <div class="list">
           @for (a of past(); track a.id) {
             <app-appointment-item [appointment]="a" [showNote]="false" />
@@ -90,6 +90,7 @@ export class MyAppointmentsPage {
   private api = inject(PatientApi);
   private toast = inject(ToastService);
   private confirm = inject(ConfirmService);
+  private i18n = inject(I18n);
 
   protected readonly appointments = signal<Appointment[]>([]);
   protected readonly loading = signal(true);
@@ -125,12 +126,12 @@ export class MyAppointmentsPage {
 
   async cancel(a: Appointment) {
     const r = await this.confirm.ask({
-      title: 'Annuler ce rendez-vous ?',
-      message: 'Le créneau sera libéré et le cabinet sera prévenu.',
-      confirmLabel: 'Annuler le rendez-vous',
-      cancelLabel: 'Garder',
+      title: this.i18n.t('myAppointments.cancelTitle'),
+      message: this.i18n.t('myAppointments.cancelText'),
+      confirmLabel: this.i18n.t('myAppointments.cancelConfirm'),
+      cancelLabel: this.i18n.t('myAppointments.cancelKeep'),
       tone: 'danger',
-      input: { label: 'Motif (facultatif)', placeholder: 'Ex. : empêchement professionnel' },
+      input: { label: this.i18n.t('myAppointments.cancelReasonLabel'), placeholder: this.i18n.t('myAppointments.cancelReasonPlaceholder') },
     });
     if (!r.confirmed) return;
     this.busy.set(a.id);
@@ -138,11 +139,11 @@ export class MyAppointmentsPage {
       next: (updated) => {
         this.busy.set(null);
         this.appointments.update((l) => l.map((x) => (x.id === updated.id ? updated : x)));
-        this.toast.success('Rendez-vous annulé', 'Le cabinet a été informé.');
+        this.toast.success(this.i18n.t('myAppointments.toastCancelled'), this.i18n.t('myAppointments.toastCancelledText'));
       },
       error: (e) => {
         this.busy.set(null);
-        this.toast.error('Annulation impossible', errorMessage(e));
+        this.toast.error(this.i18n.t('myAppointments.toastCancelError'), errorMessage(e));
       },
     });
   }

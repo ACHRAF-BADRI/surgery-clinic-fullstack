@@ -9,37 +9,37 @@ import { EmptyStateComponent } from '../../ui/empty-state';
 import { FieldErrorComponent } from '../../ui/field-error';
 import { IconComponent } from '../../ui/icon';
 import { AuthFrameComponent } from './auth-frame';
+import { I18n, TranslatePipe } from '../../core/i18n/i18n';
 
 /** Password setup from an emailed link (clinic invitation or reset). */
 @Component({
   selector: 'app-set-password',
-  imports: [ReactiveFormsModule, RouterLink, AuthFrameComponent, FieldErrorComponent, IconComponent, EmptyStateComponent],
+  imports: [ReactiveFormsModule, RouterLink, AuthFrameComponent, FieldErrorComponent, IconComponent, EmptyStateComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <app-auth-frame title="Choisissez votre mot de passe" subtitle="Il vous permettra d'accéder à votre espace patient.">
+    <app-auth-frame title="auth.setPassword.title" subtitle="auth.setPassword.subtitle">
       @if (!token()) {
-        <app-empty-state illustration="lock" [compact]="true" title="Lien incomplet"
-          message="Ce lien ne contient pas de jeton valide. Demandez un nouveau lien.">
-          <a class="btn btn-primary" routerLink="/mot-de-passe-oublie">Recevoir un nouveau lien</a>
+        <app-empty-state illustration="lock" [compact]="true" [title]="'auth.setPassword.incompleteTitle' | t" [message]="'auth.setPassword.incompleteText' | t">
+          <a class="btn btn-primary" routerLink="/mot-de-passe-oublie">{{ 'auth.setPassword.newLink' | t }}</a>
         </app-empty-state>
       } @else if (invalid()) {
-        <app-empty-state illustration="error" [compact]="true" title="Lien expiré ou invalide" [message]="invalid()!">
-          <a class="btn btn-primary" routerLink="/mot-de-passe-oublie">Recevoir un nouveau lien</a>
+        <app-empty-state illustration="error" [compact]="true" [title]="'auth.setPassword.invalidTitle' | t" [message]="invalid()!">
+          <a class="btn btn-primary" routerLink="/mot-de-passe-oublie">{{ 'auth.setPassword.newLink' | t }}</a>
         </app-empty-state>
       } @else {
         <form class="stack" style="--gap: 18px" [formGroup]="form" (ngSubmit)="submit()" novalidate>
           <div class="field">
-            <label class="label" for="password">Nouveau mot de passe</label>
+            <label class="label" for="password">{{ 'auth.setPassword.newPassword' | t }}</label>
             <input id="password" class="input" type="password" formControlName="password" autocomplete="new-password" />
-            <app-field-error [control]="form.controls.password" label="Le mot de passe" />
+            <app-field-error [control]="form.controls.password" />
           </div>
           <div class="field">
-            <label class="label" for="confirm">Confirmation</label>
+            <label class="label" for="confirm">{{ 'common.confirmation' | t }}</label>
             <input id="confirm" class="input" type="password" formControlName="confirm" autocomplete="new-password" />
-            <app-field-error [control]="form.controls.confirm" label="La confirmation" />
+            <app-field-error [control]="form.controls.confirm" />
           </div>
           <button class="btn btn-primary btn-lg btn-block" type="submit" [class.is-loading]="loading()" [disabled]="loading()">
-            Enregistrer et me connecter <app-icon name="arrow-right" [size]="16" />
+            {{ 'auth.setPassword.submit' | t }} <app-icon name="arrow-right" [size]="16" />
           </button>
         </form>
       }
@@ -50,6 +50,7 @@ export class SetPasswordPage {
   private auth = inject(AuthService);
   private router = inject(Router);
   private toast = inject(ToastService);
+  protected readonly i18n = inject(I18n);
   readonly token = input<string>();
   protected readonly loading = signal(false);
   protected readonly invalid = signal<string | null>(null);
@@ -70,7 +71,7 @@ export class SetPasswordPage {
     this.loading.set(true);
     this.auth.setPassword(this.token()!, this.form.getRawValue().password).subscribe({
       next: (r) => {
-        this.toast.success('Mot de passe enregistré', 'Bienvenue dans votre espace.');
+        this.toast.success(this.i18n.t('auth.setPassword.toastSaved'), this.i18n.t('auth.setPassword.toastWelcome'));
         this.router.navigateByUrl(this.auth.homeFor(r.user.role));
       },
       error: (e) => {

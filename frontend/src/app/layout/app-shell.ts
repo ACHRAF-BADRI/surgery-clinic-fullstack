@@ -3,16 +3,18 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from '../core/auth.service';
-import { ROLE_LABELS, ROLE_TONES } from '../core/format';
+import { ROLE_TONES } from '../core/format';
+import { I18n, TKey, TranslatePipe } from '../core/i18n/i18n';
 import { UnreadService } from '../core/unread.service';
 import { AvatarComponent } from '../ui/avatar';
 import { BadgeComponent } from '../ui/badge';
 import { IconComponent } from '../ui/icon';
 import { LogoComponent } from '../ui/logo';
 import { ThemeToggleComponent } from '../ui/theme-toggle';
+import { LangToggleComponent } from '../ui/lang-toggle';
 
 interface NavItem {
-  label: string;
+  label: TKey;
   icon: string;
   link: string;
   unread?: boolean;
@@ -20,14 +22,14 @@ interface NavItem {
 }
 
 interface NavSection {
-  title?: string;
+  title?: TKey;
   items: NavItem[];
 }
 
 /** Shell of signed-in areas: sidebar (drawer on mobile) and content. */
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LogoComponent, IconComponent, AvatarComponent, BadgeComponent, ThemeToggleComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LogoComponent, IconComponent, AvatarComponent, BadgeComponent, ThemeToggleComponent, LangToggleComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     :host { display: block; min-height: 100dvh; }
@@ -93,20 +95,20 @@ interface NavSection {
     }
   `,
   template: `
-    <aside [class.open]="drawer()" aria-label="Navigation de l'espace">
+    <aside [class.open]="drawer()" [attr.aria-label]="'shell.navigation' | t">
       <div class="brand"><app-logo /></div>
       <nav>
         @for (section of sections(); track $index) {
           <div>
             @if (section.title) {
-              <div class="section-title">{{ section.title }}</div>
+              <div class="section-title">{{ section.title | t }}</div>
             }
             @for (item of section.items; track item.link) {
               <a [routerLink]="item.link" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: !!item.exact }">
                 <app-icon [name]="item.icon" [size]="18" />
-                {{ item.label }}
+                {{ item.label | t }}
                 @if (item.unread && unread.count() > 0) {
-                  <span class="count" [attr.aria-label]="unread.count() + ' non lu(s)'">{{ unread.count() }}</span>
+                  <span class="count" [attr.aria-label]="'shell.unread' | t: { count: unread.count() }">{{ unread.count() }}</span>
                 }
               </a>
             }
@@ -118,10 +120,10 @@ interface NavSection {
         <div class="who">
           <div class="name">{{ auth.displayName() }}</div>
           @if (auth.role(); as role) {
-            <app-badge [tone]="ROLE_TONES[role]" size="sm">{{ ROLE_LABELS[role] }}</app-badge>
+            <app-badge [tone]="ROLE_TONES[role]" size="sm">{{ i18n.role(role) }}</app-badge>
           }
         </div>
-        <button class="logout" type="button" (click)="auth.logout()" title="Se déconnecter" aria-label="Se déconnecter">
+        <button class="logout" type="button" (click)="auth.logout()" [title]="'shell.logout' | t" [attr.aria-label]="'shell.logout' | t">
           <app-icon name="log-out" [size]="17" />
         </button>
       </div>
@@ -132,14 +134,15 @@ interface NavSection {
 
     <div class="content">
       <div class="topbar">
-        <button class="icon-btn burger" type="button" (click)="drawer.set(true)" aria-label="Ouvrir le menu">
+        <button class="icon-btn burger" type="button" (click)="drawer.set(true)" [attr.aria-label]="'shell.openMenu' | t">
           <app-icon name="menu" />
         </button>
         <span class="mobile-logo"><app-logo [compact]="true" /></span>
         <div class="right">
           <a class="btn btn-ghost btn-sm" routerLink="/">
-            <app-icon name="arrow-left" [size]="15" /> Site
+            <app-icon name="arrow-left" [size]="15" /> {{ 'shell.site' | t }}
           </a>
+          <app-lang-toggle />
           <app-theme-toggle />
         </div>
       </div>
@@ -150,44 +153,44 @@ interface NavSection {
 export class AppShellComponent {
   protected readonly auth = inject(AuthService);
   protected readonly unread = inject(UnreadService);
-  protected readonly ROLE_LABELS = ROLE_LABELS;
+  protected readonly i18n = inject(I18n);
   protected readonly ROLE_TONES = ROLE_TONES;
   protected readonly drawer = signal(false);
 
   protected readonly sections = computed<NavSection[]>(() => {
     const doctorItems: NavItem[] = [
-      { label: 'Tableau de bord', icon: 'dashboard', link: '/cabinet/tableau-de-bord' },
-      { label: 'Agenda', icon: 'calendar', link: '/cabinet/agenda' },
-      { label: 'Patients', icon: 'users', link: '/cabinet/patients' },
-      { label: 'Messagerie', icon: 'message', link: '/cabinet/messages', unread: true },
+      { label: 'shell.dashboard', icon: 'dashboard', link: '/cabinet/tableau-de-bord' },
+      { label: 'shell.agenda', icon: 'calendar', link: '/cabinet/agenda' },
+      { label: 'shell.patients', icon: 'users', link: '/cabinet/patients' },
+      { label: 'shell.messages', icon: 'message', link: '/cabinet/messages', unread: true },
     ];
     switch (this.auth.role()) {
       case 'ADMIN':
         return [
           {
-            title: 'Administration',
+            title: 'shell.administration',
             items: [
-              { label: 'Vue d’ensemble', icon: 'activity', link: '/admin/tableau-de-bord' },
-              { label: 'Utilisateurs', icon: 'shield', link: '/admin/utilisateurs' },
+              { label: 'shell.overview', icon: 'activity', link: '/admin/tableau-de-bord' },
+              { label: 'shell.users', icon: 'shield', link: '/admin/utilisateurs' },
             ],
           },
-          { title: 'Cabinet', items: doctorItems },
-          { title: 'Compte', items: [{ label: 'Mon profil', icon: 'user', link: '/admin/profil' }] },
+          { title: 'shell.clinic', items: doctorItems },
+          { title: 'shell.account', items: [{ label: 'shell.profile', icon: 'user', link: '/admin/profil' }] },
         ];
       case 'DOCTOR':
         return [
-          { title: 'Cabinet', items: doctorItems },
-          { title: 'Compte', items: [{ label: 'Mon profil', icon: 'user', link: '/cabinet/profil' }] },
+          { title: 'shell.clinic', items: doctorItems },
+          { title: 'shell.account', items: [{ label: 'shell.profile', icon: 'user', link: '/cabinet/profil' }] },
         ];
       default:
         return [
           {
-            title: 'Mon espace',
+            title: 'shell.mySpace',
             items: [
-              { label: 'Mes rendez-vous', icon: 'calendar', link: '/espace/rendez-vous' },
-              { label: 'Prendre rendez-vous', icon: 'calendar-plus', link: '/rendez-vous' },
-              { label: 'Messagerie', icon: 'message', link: '/espace/messages', unread: true },
-              { label: 'Mon profil', icon: 'user', link: '/espace/profil' },
+              { label: 'shell.myAppointments', icon: 'calendar', link: '/espace/rendez-vous' },
+              { label: 'shell.book', icon: 'calendar-plus', link: '/rendez-vous' },
+              { label: 'shell.messages', icon: 'message', link: '/espace/messages', unread: true },
+              { label: 'shell.profile', icon: 'user', link: '/espace/profil' },
             ],
           },
         ];

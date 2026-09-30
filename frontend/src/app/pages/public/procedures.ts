@@ -7,6 +7,7 @@ import { EmptyStateComponent } from '../../ui/empty-state';
 import { IconComponent } from '../../ui/icon';
 import { SkeletonListComponent } from '../../ui/skeleton';
 import { BadgeComponent } from '../../ui/badge';
+import { I18n, TranslatePipe } from '../../core/i18n/i18n';
 
 const CATEGORY_ICONS: Partial<Record<string, string>> = {
   Visage: 'sparkles',
@@ -18,7 +19,7 @@ const CATEGORY_ICONS: Partial<Record<string, string>> = {
 
 @Component({
   selector: 'app-procedures',
-  imports: [RouterLink, IconComponent, EmptyStateComponent, SkeletonListComponent, BadgeComponent],
+  imports: [RouterLink, IconComponent, EmptyStateComponent, SkeletonListComponent, BadgeComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     .intro { max-width: 720px; margin-bottom: 36px; }
@@ -37,20 +38,17 @@ const CATEGORY_ICONS: Partial<Record<string, string>> = {
     <section class="section" style="padding-top: 48px">
       <div class="container">
         <div class="intro animate-in">
-          <span class="eyebrow">Interventions</span>
-          <h1>Des soins sur mesure.</h1>
-          <p class="lead">
-            Chaque intervention est précédée d'une consultation d'information. Les techniques, les suites opératoires
-            et les résultats attendus sont toujours expliqués avec transparence.
-          </p>
+          <span class="eyebrow">{{ 'procedures.eyebrow' | t }}</span>
+          <h1>{{ 'procedures.title' | t }}</h1>
+          <p class="lead">{{ 'procedures.lead' | t }}</p>
         </div>
 
         @if (!loading() && !error()) {
-          <div class="filters" role="tablist" aria-label="Catégories">
-            <button class="chip" [class.active]="!active()" (click)="active.set(null)" role="tab">Toutes</button>
+          <div class="filters" role="tablist" [attr.aria-label]="'procedures.categories' | t">
+            <button class="chip" [class.active]="!active()" (click)="active.set(null)" role="tab">{{ 'procedures.all' | t }}</button>
             @for (c of categories(); track c) {
               <button class="chip" [class.active]="active() === c" (click)="active.set(c)" role="tab">
-                <app-icon [name]="icons[c] ?? 'sparkles'" [size]="15" /> {{ c }}
+                <app-icon [name]="icons[c] ?? 'sparkles'" [size]="15" /> {{ i18n.category(c) }}
               </button>
             }
           </div>
@@ -59,12 +57,12 @@ const CATEGORY_ICONS: Partial<Record<string, string>> = {
         @if (loading()) {
           <app-skeleton-list variant="cards" [count]="6" />
         } @else if (error()) {
-          <app-empty-state illustration="offline" title="Impossible de charger les interventions" [message]="error()!">
-            <button class="btn btn-primary" (click)="load()"><app-icon name="refresh" [size]="16" /> Réessayer</button>
+          <app-empty-state illustration="offline" [title]="'procedures.loadError' | t" [message]="error()!">
+            <button class="btn btn-primary" (click)="load()"><app-icon name="refresh" [size]="16" /> {{ 'common.retry' | t }}</button>
           </app-empty-state>
         } @else if (filtered().length === 0) {
-          <app-empty-state illustration="search" title="Aucune intervention dans cette catégorie">
-            <button class="btn" (click)="active.set(null)">Voir toutes les interventions</button>
+          <app-empty-state illustration="search" [title]="'procedures.empty' | t">
+            <button class="btn" (click)="active.set(null)">{{ 'procedures.seeAll' | t }}</button>
           </app-empty-state>
         } @else {
           <div class="grid grid-3 stagger">
@@ -72,12 +70,12 @@ const CATEGORY_ICONS: Partial<Record<string, string>> = {
               <article class="card card-hover proc">
                 <div class="top">
                   <span class="ic"><app-icon [name]="icons[p.category] ?? 'sparkles'" [size]="20" /></span>
-                  <app-badge size="sm" tone="accent">{{ p.category }}</app-badge>
+                  <app-badge size="sm" tone="accent">{{ i18n.category(p.category) }}</app-badge>
                 </div>
-                <h3>{{ p.label }}</h3>
-                <p>{{ p.description }}</p>
+                <h3>{{ i18n.procedure(p.code) }}</h3>
+                <p>{{ i18n.procedureDesc(p.code) }}</p>
                 <a class="more" routerLink="/rendez-vous" [queryParams]="{ intervention: p.code }">
-                  Prendre rendez-vous <app-icon name="arrow-right" [size]="15" />
+                  {{ 'nav.book' | t }} <app-icon name="arrow-right" [size]="15" />
                 </a>
               </article>
             }
@@ -90,6 +88,7 @@ const CATEGORY_ICONS: Partial<Record<string, string>> = {
 export class ProceduresPage {
   private api = inject(PublicApi);
   protected readonly icons = CATEGORY_ICONS;
+  protected readonly i18n = inject(I18n);
   /** Initial filter from ?categorie=… */
   readonly categorie = input<string>();
 

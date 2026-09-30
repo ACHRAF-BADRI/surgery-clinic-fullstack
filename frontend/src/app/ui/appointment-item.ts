@@ -1,18 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { BRAND } from '../core/config';
-import { formatTime, STATUS_LABELS, STATUS_TONES } from '../core/format';
+import { formatPart, formatTime, STATUS_TONES, ymdInZone, todayYmd } from '../core/format';
+import { I18n, TranslatePipe } from '../core/i18n/i18n';
 import { Appointment } from '../core/models';
 import { BadgeComponent } from './badge';
 import { IconComponent } from './icon';
 
-const tz = BRAND.timeZone;
-const part = (iso: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('fr-FR', { timeZone: tz, ...o }).format(new Date(iso));
 
 /** Appointment row: date block, time, reason, status and contextual badges. */
 @Component({
   selector: 'app-appointment-item',
-  imports: [BadgeComponent, IconComponent, RouterLink],
+  imports: [BadgeComponent, IconComponent, RouterLink, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     :host { display: block; }
@@ -53,35 +51,35 @@ const part = (iso: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFo
               <span class="who">{{ a.patient.name }}</span>
             }
           } @else {
-            <span>{{ a.typeLabel }}</span>
+            <span>{{ i18n.apptType(a.type) }}</span>
           }
           <div class="badges">
-            <app-badge [tone]="tones[a.status]" [dot]="true" [pulse]="a.status === 'PENDING'" size="sm">{{ labels[a.status] }}</app-badge>
+            <app-badge [tone]="tones[a.status]" [dot]="true" [pulse]="a.status === 'PENDING'" size="sm">{{ i18n.status(a.status) }}</app-badge>
             @if (showPatient() && !a.patient.hasAccount) {
-              <app-badge tone="warning" icon="user-x" size="sm" [outline]="true">Sans compte</app-badge>
+              <app-badge tone="warning" icon="user-x" size="sm" [outline]="true">{{ 'badges.noAccount' | t }}</app-badge>
             }
             @if (a.rescheduleCount > 0) {
-              <app-badge tone="info" icon="calendar-clock" size="sm" [outline]="true">Déplacé</app-badge>
+              <app-badge tone="info" icon="calendar-clock" size="sm" [outline]="true">{{ 'badges.rescheduled' | t }}</app-badge>
             }
             @if (!showPatient() && a.bookedByClinic) {
-              <app-badge tone="accent" size="sm" [outline]="true">Planifié par le cabinet</app-badge>
+              <app-badge tone="accent" size="sm" [outline]="true">{{ 'badges.bookedByClinic' | t }}</app-badge>
             }
           </div>
         </div>
         <div class="meta">
           <span class="time"><app-icon name="clock" [size]="13" /> {{ weekday() }} · {{ start() }} – {{ end() }}</span>
           @if (showPatient()) {
-            <span><app-icon name="file" [size]="13" /> {{ a.typeLabel }}</span>
+            <span><app-icon name="file" [size]="13" /> {{ i18n.apptType(a.type) }}</span>
           }
-          @if (a.procedureLabel) {
-            <span><app-icon name="sparkles" [size]="13" /> {{ a.procedureLabel }}</span>
+          @if (a.procedure) {
+            <span><app-icon name="sparkles" [size]="13" /> {{ i18n.procedure(a.procedure) }}</span>
           }
         </div>
         @if (a.patientNote && showNote()) {
-          <div class="note">« {{ a.patientNote }} »</div>
+          <div class="note">“{{ a.patientNote }}”</div>
         }
         @if (a.status === 'CANCELLED' && a.cancelReason) {
-          <div class="note">Motif d'annulation : {{ a.cancelReason }}</div>
+          <div class="note">{{ 'appointment.cancelReason' | t: { reason: a.cancelReason } }}</div>
         }
       </div>
       <div class="actions"><ng-content /></div>
@@ -93,18 +91,16 @@ export class AppointmentItemComponent {
   readonly showPatient = input(false);
   readonly patientLink = input(true);
   readonly showNote = input(true);
-  protected readonly labels = STATUS_LABELS;
+  protected readonly i18n = inject(I18n);
   protected readonly tones = STATUS_TONES;
 
-  protected readonly day = computed(() => part(this.appointment().startAt, { day: 'numeric' }));
-  protected readonly month = computed(() => part(this.appointment().startAt, { month: 'short' }).replace('.', ''));
+  protected readonly day = computed(() => formatPart(this.appointment().startAt, { day: 'numeric' }));
+  protected readonly month = computed(() => formatPart(this.appointment().startAt, { month: 'short' }).replace('.', ''));
   protected readonly weekday = computed(() => {
-    const s = part(this.appointment().startAt, { weekday: 'long' });
+    const s = formatPart(this.appointment().startAt, { weekday: 'long' });
     return s.charAt(0).toUpperCase() + s.slice(1);
   });
   protected readonly start = computed(() => formatTime(this.appointment().startAt));
   protected readonly end = computed(() => formatTime(this.appointment().endAt));
-  protected readonly isToday = computed(
-    () => part(this.appointment().startAt, { dateStyle: 'short' }) === part(new Date().toISOString(), { dateStyle: 'short' }),
-  );
+  protected readonly isToday = computed(() => ymdInZone(this.appointment().startAt) === todayYmd());
 }

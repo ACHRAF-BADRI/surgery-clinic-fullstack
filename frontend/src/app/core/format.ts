@@ -1,31 +1,41 @@
-import { BRAND } from './config';
-import { AppointmentStatus, ApiError, Role } from './models';
 import { HttpErrorResponse } from '@angular/common/http';
+import { BRAND } from './config';
+import { currentLang, currentLocale, hasKey, translate } from './i18n/i18n';
+import { AppointmentStatus, ApiError, Role } from './models';
 
 const tz = BRAND.timeZone;
 
-const fmt = (opts: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('fr-FR', { timeZone: tz, ...opts });
-
-const dayLong = fmt({ weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-const dayShort = fmt({ weekday: 'short', day: 'numeric', month: 'short' });
-const dateOnly = fmt({ day: '2-digit', month: '2-digit', year: 'numeric' });
-const time = fmt({ hour: '2-digit', minute: '2-digit' });
-const monthShort = fmt({ month: 'short' });
+/** Intl formatter in the current language and the clinic time zone (reading the locale tracks language changes). */
+const fmt = (opts: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(currentLocale(), { timeZone: tz, ...opts });
 const ymd = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' });
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-export const formatDayLong = (iso?: string | Date) => (iso ? cap(dayLong.format(new Date(iso))) : '—');
-export const formatDayShort = (iso?: string | Date) => (iso ? cap(dayShort.format(new Date(iso))) : '—');
-export const formatDate = (iso?: string | Date) => (iso ? dateOnly.format(new Date(iso)) : '—');
-export const formatTime = (iso?: string | Date) => (iso ? time.format(new Date(iso)).replace(':', 'h') : '—');
+export const formatDayLong = (iso?: string | Date) =>
+  iso ? cap(fmt({ weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso))) : '—';
+export const formatDayShort = (iso?: string | Date) =>
+  iso ? cap(fmt({ weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(iso))) : '—';
+export const formatDate = (iso?: string | Date) =>
+  iso ? fmt({ day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(iso)) : '—';
+/** "14h30" in French, "14:30" in English. */
+export const formatTime = (iso?: string | Date) => {
+  if (!iso) return '—';
+  const s = fmt({ hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(iso));
+  return currentLang() === 'fr' ? s.replace(':', 'h') : s;
+};
 export const formatDateTime = (iso?: string | Date) => (iso ? `${formatDayShort(iso)} · ${formatTime(iso)}` : '—');
 
-/** "2026-09" → "sept." */
-export const formatMonthLabel = (ym: string) => {
-  const [y, m] = ym.split('-').map(Number);
-  return cap(monthShort.format(new Date(Date.UTC(y, m - 1, 15))));
-};
+/** Formats a date part in the current language, e.g. formatPart(iso, { weekday: 'long' }). */
+export const formatPart = (iso: string | Date, opts: Intl.DateTimeFormatOptions) => fmt(opts).format(new Date(iso));
+
+/** Formats a calendar day (YYYY-MM-DD) without time-zone shifts. */
+export const formatYmd = (ymdStr: string, opts: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat(currentLocale(), { timeZone: 'UTC', ...opts }).format(new Date(`${ymdStr}T12:00:00Z`));
+
+/** "2026-09" → "Sept." / "Sep" */
+export const formatMonthLabel = (ym: string) => cap(formatYmd(`${ym}-15`, { month: 'short' }));
+/** "2026-09" → "septembre 2026" / "September 2026" */
+export const formatMonthLong = (ym: string) => formatYmd(`${ym}-15`, { month: 'long', year: 'numeric' });
 
 /** Today's date (clinic time zone) as YYYY-MM-DD. */
 export const todayYmd = () => ymd.format(new Date());
@@ -48,15 +58,14 @@ export function zonedToInstant(dateYmd: string, hhmm: string): Date {
   return new Date(guess.getTime() - (asZoned - guess.getTime()));
 }
 
-export const timeInZone = (iso: string) => time.format(new Date(iso));
 export const ymdInZone = (iso: string) => ymd.format(new Date(iso));
 
 export const relativeTime = (iso?: string) => {
   if (!iso) return '';
   const diff = (new Date(iso).getTime() - Date.now()) / 1000;
-  const rtf = new Intl.RelativeTimeFormat('fr', { numeric: 'auto' });
+  const rtf = new Intl.RelativeTimeFormat(currentLang(), { numeric: 'auto' });
   const abs = Math.abs(diff);
-  if (abs < 60) return "à l'instant";
+  if (abs < 60) return translate('common.justNow');
   if (abs < 3600) return rtf.format(Math.round(diff / 60), 'minute');
   if (abs < 86400) return rtf.format(Math.round(diff / 3600), 'hour');
   if (abs < 86400 * 7) return rtf.format(Math.round(diff / 86400), 'day');
@@ -81,13 +90,7 @@ export const age = (dob?: string) => {
   return a;
 };
 
-export const STATUS_LABELS: Record<AppointmentStatus, string> = {
-  PENDING: 'En attente',
-  CONFIRMED: 'Confirmé',
-  CANCELLED: 'Annulé',
-  COMPLETED: 'Terminé',
-  NO_SHOW: 'Absent',
-};
+export type BadgeTone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'info';
 
 export const STATUS_TONES: Record<AppointmentStatus, BadgeTone> = {
   PENDING: 'warning',
@@ -97,31 +100,29 @@ export const STATUS_TONES: Record<AppointmentStatus, BadgeTone> = {
   NO_SHOW: 'danger',
 };
 
-export const ROLE_LABELS: Record<Role, string> = {
-  ADMIN: 'Administrateur',
-  DOCTOR: 'Docteur',
-  PATIENT: 'Patient',
-};
-
 export const ROLE_TONES: Record<Role, BadgeTone> = {
   ADMIN: 'info',
   DOCTOR: 'accent',
   PATIENT: 'neutral',
 };
 
-export type BadgeTone = 'neutral' | 'accent' | 'success' | 'warning' | 'danger' | 'info';
-
-/** Human-readable message from an HTTP error. */
-export function errorMessage(err: unknown, fallback = 'Une erreur est survenue. Merci de réessayer.'): string {
-  if (err instanceof HttpErrorResponse) {
-    if (err.status === 0) return 'Serveur injoignable. Vérifiez votre connexion ou réessayez dans un instant.';
-    const body = err.error as Partial<ApiError> | null;
-    if (body?.fields && Object.keys(body.fields).length) {
-      return Object.values(body.fields)[0] ?? body.message ?? fallback;
-    }
+/**
+ * Human-readable message from an HTTP error.
+ * French: the server message (most specific). English: the dictionary entry for the error code.
+ */
+export function errorMessage(err: unknown, fallback?: string): string {
+  const generic = fallback ?? translate('errors.generic');
+  if (!(err instanceof HttpErrorResponse)) return generic;
+  if (err.status === 0) return translate('errors.network');
+  const body = err.error as Partial<ApiError> | null;
+  if (currentLang() === 'fr') {
+    if (body?.fields && Object.keys(body.fields).length) return Object.values(body.fields)[0] ?? body.message ?? generic;
     if (body?.message) return body.message;
   }
-  return fallback;
+  const code = body?.code;
+  if (code === 'ACCOUNT_RESTRICTED' && body?.detail) return translate('errors.ACCOUNT_RESTRICTED_REASON', { reason: body.detail });
+  if (code && hasKey(`errors.${code}`)) return translate(`errors.${code}`);
+  return generic;
 }
 
 export function errorCode(err: unknown): string | undefined {

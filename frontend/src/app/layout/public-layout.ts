@@ -8,10 +8,12 @@ import { AvatarComponent } from '../ui/avatar';
 import { IconComponent } from '../ui/icon';
 import { LogoComponent } from '../ui/logo';
 import { ThemeToggleComponent } from '../ui/theme-toggle';
+import { LangToggleComponent } from '../ui/lang-toggle';
+import { TranslatePipe } from '../core/i18n/i18n';
 
 @Component({
   selector: 'app-public-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LogoComponent, ThemeToggleComponent, IconComponent, AvatarComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LogoComponent, ThemeToggleComponent, LangToggleComponent, IconComponent, AvatarComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     :host { display: flex; flex-direction: column; min-height: 100dvh; }
@@ -46,6 +48,8 @@ import { ThemeToggleComponent } from '../ui/theme-toggle';
       width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface);
       display: grid; place-items: center; cursor: pointer; color: var(--text);
     }
+    .lang-mobile { display: none; }
+    @media (max-width: 420px) { .actions app-lang-toggle { display: none; } .lang-mobile { display: block; margin-top: 8px; } }
     @media (min-width: 960px) {
       nav.desktop { display: flex; }
       .desktop-only { display: inline-flex; }
@@ -81,27 +85,28 @@ import { ThemeToggleComponent } from '../ui/theme-toggle';
     <header [class.scrolled]="scrolled() || menuOpen()">
       <div class="container bar">
         <app-logo />
-        <nav class="desktop" aria-label="Navigation principale">
-          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
-          <a routerLink="/interventions" routerLinkActive="active">Interventions</a>
-          <a routerLink="/rendez-vous" routerLinkActive="active">Rendez-vous</a>
-          <a routerLink="/contact" routerLinkActive="active">Contact</a>
+        <nav class="desktop" [attr.aria-label]="'nav.main' | t">
+          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">{{ 'nav.home' | t }}</a>
+          <a routerLink="/interventions" routerLinkActive="active">{{ 'nav.procedures' | t }}</a>
+          <a routerLink="/rendez-vous" routerLinkActive="active">{{ 'nav.appointments' | t }}</a>
+          <a routerLink="/contact" routerLinkActive="active">{{ 'nav.contact' | t }}</a>
         </nav>
         <div class="actions">
+          <app-lang-toggle />
           <app-theme-toggle />
           @if (auth.isLoggedIn()) {
             <a class="account desktop-only" [routerLink]="auth.homeFor()">
               <app-avatar [name]="auth.displayName()" [size]="30" />
-              Mon espace
+              {{ 'nav.mySpace' | t }}
             </a>
           } @else {
-            <a class="btn btn-ghost desktop-only" routerLink="/connexion">Connexion</a>
+            <a class="btn btn-ghost desktop-only" routerLink="/connexion">{{ 'nav.login' | t }}</a>
             <a class="btn btn-primary desktop-only" routerLink="/rendez-vous">
-              Prendre rendez-vous <app-icon name="arrow-right" [size]="16" />
+              {{ 'nav.book' | t }} <app-icon name="arrow-right" [size]="16" />
             </a>
           }
           <button class="burger" type="button" (click)="menuOpen.set(!menuOpen())"
-            [attr.aria-expanded]="menuOpen()" aria-label="Menu">
+            [attr.aria-expanded]="menuOpen()" [attr.aria-label]="'nav.menu' | t">
             <app-icon [name]="menuOpen() ? 'x' : 'menu'" />
           </button>
         </div>
@@ -109,18 +114,19 @@ import { ThemeToggleComponent } from '../ui/theme-toggle';
     </header>
 
     @if (menuOpen()) {
-      <div class="mobile" role="dialog" aria-label="Menu">
-        <a class="item" routerLink="/">Accueil <app-icon name="arrow-right" /></a>
-        <a class="item" routerLink="/interventions">Interventions <app-icon name="arrow-right" /></a>
-        <a class="item" routerLink="/rendez-vous">Rendez-vous <app-icon name="arrow-right" /></a>
-        <a class="item" routerLink="/contact">Contact <app-icon name="arrow-right" /></a>
+      <div class="mobile" role="dialog" [attr.aria-label]="'nav.menu' | t">
+        <a class="item" routerLink="/">{{ 'nav.home' | t }} <app-icon name="arrow-right" /></a>
+        <a class="item" routerLink="/interventions">{{ 'nav.procedures' | t }} <app-icon name="arrow-right" /></a>
+        <a class="item" routerLink="/rendez-vous">{{ 'nav.appointments' | t }} <app-icon name="arrow-right" /></a>
+        <a class="item" routerLink="/contact">{{ 'nav.contact' | t }} <app-icon name="arrow-right" /></a>
         <div class="cta">
           @if (auth.isLoggedIn()) {
-            <a class="btn btn-primary btn-lg" [routerLink]="auth.homeFor()">Mon espace</a>
+            <a class="btn btn-primary btn-lg" [routerLink]="auth.homeFor()">{{ 'nav.mySpace' | t }}</a>
           } @else {
-            <a class="btn btn-primary btn-lg" routerLink="/rendez-vous">Prendre rendez-vous</a>
-            <a class="btn btn-lg" routerLink="/connexion">Connexion</a>
+            <a class="btn btn-primary btn-lg" routerLink="/rendez-vous">{{ 'nav.book' | t }}</a>
+            <a class="btn btn-lg" routerLink="/connexion">{{ 'nav.login' | t }}</a>
           }
+          <div class="lang-mobile"><app-lang-toggle /></div>
         </div>
       </div>
     }
@@ -133,11 +139,11 @@ import { ThemeToggleComponent } from '../ui/theme-toggle';
           <div class="stack" style="--gap: 14px">
             <app-logo />
             <p class="text-2" style="font-size: .9rem; max-width: 300px">
-              {{ BRAND.tagline }}. Une approche sur mesure, sûre et naturelle.
+              {{ 'footer.tagline' | t }}
             </p>
           </div>
           <div>
-            <h4>Le cabinet</h4>
+            <h4>{{ 'footer.clinic' | t }}</h4>
             <ul>
               <li class="line"><app-icon name="map-pin" [size]="16" /> {{ BRAND.address }}</li>
               <li class="line"><app-icon name="phone" [size]="16" /> <a [href]="'tel:' + BRAND.phoneHref">{{ BRAND.phone }}</a></li>
@@ -145,25 +151,24 @@ import { ThemeToggleComponent } from '../ui/theme-toggle';
             </ul>
           </div>
           <div>
-            <h4>Navigation</h4>
+            <h4>{{ 'footer.navigation' | t }}</h4>
             <ul>
-              <li><a routerLink="/interventions">Interventions</a></li>
-              <li><a routerLink="/rendez-vous">Prendre rendez-vous</a></li>
-              <li><a routerLink="/contact">Écrire au docteur</a></li>
-              <li><a routerLink="/connexion">Espace patient</a></li>
+              <li><a routerLink="/interventions">{{ 'nav.procedures' | t }}</a></li>
+              <li><a routerLink="/rendez-vous">{{ 'nav.book' | t }}</a></li>
+              <li><a routerLink="/contact">{{ 'footer.writeDoctor' | t }}</a></li>
+              <li><a routerLink="/connexion">{{ 'footer.patientSpace' | t }}</a></li>
             </ul>
           </div>
           <div>
-            <h4>Urgence</h4>
+            <h4>{{ 'footer.emergency' | t }}</h4>
             <p class="text-2" style="font-size: .9rem">
-              En cas d'urgence médicale, composez le <strong>15</strong> ou le <strong>112</strong>.
-              La messagerie n'est pas adaptée aux urgences.
+              {{ 'footer.emergencyText' | t }}
             </p>
           </div>
         </div>
         <div class="legal">
-          <span>© {{ year }} {{ BRAND.name }} — Tous droits réservés</span>
-          <span>Données de santé protégées · RGPD</span>
+          <span>© {{ year }} {{ BRAND.name }} — {{ 'footer.rights' | t }}</span>
+          <span>{{ 'footer.gdpr' | t }}</span>
         </div>
       </div>
     </footer>

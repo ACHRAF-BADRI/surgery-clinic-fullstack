@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { TranslatePipe } from '../core/i18n/i18n';
 
 /** Loading block with an animated shimmer. */
 @Component({
@@ -41,9 +42,9 @@ export class SkeletonComponent {
 /** Ready-made loading templates (list, cards, stats, chat). */
 @Component({
   selector: 'app-skeleton-list',
-  imports: [SkeletonComponent],
+  imports: [SkeletonComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { role: 'status', 'aria-label': 'Chargement…' },
+  host: { role: 'status' },
   styles: `
     :host { display: block; }
     .row { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--border); }
@@ -109,7 +110,7 @@ export class SkeletonComponent {
         </div>
       }
     }
-    <span class="sr-only">Chargement…</span>
+    <span class="sr-only">{{ 'common.loading' | t }}</span>
   `,
 })
 export class SkeletonListComponent {
