@@ -1,6 +1,15 @@
-# Clinique Éclat — cabinet de chirurgie plastique
+# surgery-clinic-fullstack
 
-Application web d'un cabinet de chirurgie plastique, esthétique et reconstructrice : site vitrine, prise de rendez-vous en ligne, messagerie sécurisée, espace docteur et administration.
+![Angular](https://img.shields.io/badge/Angular-21-dd0031?logo=angular&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6db33f?logo=springboot&logoColor=white)
+![Java](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47a248?logo=mongodb&logoColor=white)
+![Render](https://img.shields.io/badge/API-Render-46e3b7?logo=render&logoColor=white)
+![Cloudflare Pages](https://img.shields.io/badge/Front-Cloudflare%20Pages-f38020?logo=cloudflare&logoColor=white)
+
+**Clinique Éclat** : application web full stack d'un cabinet de chirurgie plastique, esthétique et reconstructrice. Elle regroupe un site vitrine, la prise de rendez-vous en ligne, une messagerie sécurisée, un espace docteur et une administration des comptes.
+
+Trois rôles : **patient**, **docteur**, **administrateur**. Les visiteurs sans compte peuvent consulter le site et écrire au cabinet.
 
 | Partie | Technologies | Hébergement |
 |---|---|---|
@@ -44,6 +53,9 @@ Application web d'un cabinet de chirurgie plastique, esthétique et reconstructr
 Prérequis : Java 21, Maven 3.9, Node 20.19+ (ou 22), MongoDB (local ou Atlas).
 
 ```bash
+git clone https://github.com/ACHRAF-BADRI/surgery-clinic-fullstack.git
+cd surgery-clinic-fullstack
+
 # Backend
 cd backend
 cp .env.example .env        # puis renseignez les valeurs
@@ -57,6 +69,10 @@ npm start                    # http://localhost:4200
 ```
 
 `npm start` et `npm run build` génèrent d'abord `src/environments/runtime-config.ts` à partir de `API_URL` (fichier non versionné).
+
+Si le port 8080 est déjà pris, ajoutez `PORT=8090` dans `backend/.env` et `API_URL=http://localhost:8090` dans `frontend/.env`. Pour une base Atlas, l'adresse IP de votre poste doit être autorisée dans **Network Access**.
+
+Évitez les accents dans les valeurs de `backend/.env` : Spring lit ce fichier en ISO-8859-1. Les valeurs accentuées se définissent dans `application.yml` ou sur Render.
 
 Au premier démarrage, le backend crée un administrateur et un docteur (`ADMIN_*`, `DOCTOR_*`). Avec `SEED_DEMO_DATA=true` et une base sans patient, il ajoute 10 patients fictifs (mot de passe `Patient#2026`), des rendez-vous et des messages.
 
@@ -84,7 +100,7 @@ Les horaires d'ouverture et la durée des créneaux se règlent dans `backend/sr
 Créez un cluster (l'offre gratuite M0 suffit), un utilisateur de base de données, puis autorisez l'accès réseau depuis `0.0.0.0/0` (les IP sortantes de Render ne sont pas fixes sur l'offre gratuite). Copiez la chaîne de connexion en ajoutant le nom de base : `…mongodb.net/clinic?retryWrites=true&w=majority`.
 
 ### 2. Resend
-Vérifiez votre domaine (Domains), créez une clé API et utilisez une adresse de ce domaine dans `MAIL_FROM`. Sans domaine vérifié, `onboarding@resend.dev` ne peut écrire qu'à l'adresse de votre compte Resend.
+Vérifiez votre domaine (Domains), créez une clé API (une clé « Sending access » suffit) et utilisez une adresse de ce domaine dans `MAIL_FROM`. Sans domaine vérifié, `onboarding@resend.dev` ne peut écrire qu'à l'adresse de votre compte Resend.
 
 ### 3. Backend sur Render
 Render → **New → Blueprint** → sélectionnez ce dépôt : `render.yaml` crée le service Docker (`backend/Dockerfile`) et demande les variables marquées `sync: false`. `JWT_SECRET` est généré automatiquement. Le health check est `/api/health`.
@@ -124,6 +140,19 @@ frontend/
     pages/       public, auth, patient, doctor, admin, shared
 render.yaml      blueprint Render
 ```
+
+## API
+
+| Préfixe | Accès | Contenu |
+|---|---|---|
+| `/api/health` | public | health check |
+| `/api/public/*` | public | infos du cabinet, disponibilités, formulaire de contact |
+| `/api/auth/*` | public / connecté | connexion, inscription, mot de passe oublié, profil |
+| `/api/patient/*` | patient | rendez-vous, messagerie |
+| `/api/doctor/*` | docteur, admin | tableau de bord, patients, agenda, messagerie |
+| `/api/admin/*` | admin | tableau de bord, gestion des utilisateurs |
+
+Les erreurs sont renvoyées au format `{ status, code, message, fields }`, avec des messages en français.
 
 ## Sécurité
 
