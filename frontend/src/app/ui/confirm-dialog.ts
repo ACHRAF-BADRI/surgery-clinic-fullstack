@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal } fr
 import { FormsModule } from '@angular/forms';
 import { ConfirmService } from '../core/confirm.service';
 import { ModalComponent } from './modal';
+import { TranslatePipe } from '../core/i18n/i18n';
 
 @Component({
   selector: 'app-confirm-dialog',
-  imports: [ModalComponent, FormsModule],
+  imports: [ModalComponent, FormsModule, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @let c = confirm.current();
@@ -23,10 +24,10 @@ import { ModalComponent } from './modal';
         }
       }
       <ng-container footer>
-        <button class="btn btn-ghost" type="button" (click)="confirm.close(false)">{{ c?.cancelLabel ?? 'Annuler' }}</button>
+        <button class="btn btn-ghost" type="button" (click)="confirm.close(false)">{{ c?.cancelLabel ?? ('common.cancel' | t) }}</button>
         <button class="btn" type="button" [class.btn-danger]="c?.tone === 'danger'" [class.btn-primary]="c?.tone !== 'danger'"
           [disabled]="invalid()" (click)="confirm.close(true, value())">
-          {{ c?.confirmLabel ?? 'Confirmer' }}
+          {{ c?.confirmLabel ?? ('common.confirm' | t) }}
         </button>
       </ng-container>
     </app-modal>

@@ -23,7 +23,8 @@ public final class CatalogDtos {
 
     public record DoctorDto(String id, String name) {}
 
-    public record OpeningHours(String day, String hours) {}
+    /** day = MONDAY…SUNDAY; open/close = "HH:mm", both null when closed. */
+    public record OpeningHours(String day, String open, String close) {}
 
     public record ClinicInfo(String name, String timeZone, List<DoctorDto> doctors,
                              List<ProcedureDto> procedures, List<AppointmentTypeDto> appointmentTypes,

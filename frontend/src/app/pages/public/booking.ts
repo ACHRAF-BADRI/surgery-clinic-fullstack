@@ -3,7 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { PatientApi, PublicApi } from '../../core/api';
 import { AuthService } from '../../core/auth.service';
-import { addDays, errorCode, errorMessage, formatDayLong, formatTime, todayYmd } from '../../core/format';
+import { addDays, errorCode, errorMessage, formatDayLong, formatTime, formatYmd, todayYmd } from '../../core/format';
+import { I18n, TKey, TranslatePipe } from '../../core/i18n/i18n';
 import { Appointment, AppointmentType, ClinicInfo, Slot } from '../../core/models';
 import { ToastService } from '../../core/toast.service';
 import { BadgeComponent } from '../../ui/badge';
@@ -26,7 +27,7 @@ interface Draft {
 
 @Component({
   selector: 'app-booking',
-  imports: [FormsModule, RouterLink, IconComponent, BadgeComponent, BannerComponent, EmptyStateComponent, IllustrationComponent, SkeletonComponent],
+  imports: [FormsModule, RouterLink, IconComponent, BadgeComponent, BannerComponent, EmptyStateComponent, IllustrationComponent, SkeletonComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     .top { max-width: 720px; margin-bottom: 32px; }
@@ -87,30 +88,30 @@ interface Draft {
     <section class="section" style="padding-top: 48px">
       <div class="container">
         <div class="top animate-in">
-          <span class="eyebrow">Rendez-vous en ligne</span>
-          <h1>Réservez votre consultation.</h1>
-          <p class="lead">Choisissez le motif, puis le créneau qui vous convient. Le cabinet confirme chaque demande.</p>
+          <span class="eyebrow">{{ 'booking.eyebrow' | t }}</span>
+          <h1>{{ 'booking.title' | t }}</h1>
+          <p class="lead">{{ 'booking.lead' | t }}</p>
         </div>
 
         @if (auth.role() === 'DOCTOR' || auth.role() === 'ADMIN') {
-          <app-banner tone="info" title="Vous êtes connecté en tant que membre du cabinet" style="margin-bottom: 24px; display: block">
-            Pour planifier un rendez-vous pour un patient (avec ou sans compte), passez par son dossier.
-            <div actions><a class="btn btn-primary btn-sm" routerLink="/cabinet/patients">Ouvrir les patients</a></div>
+          <app-banner tone="info" [title]="'contact.staffTitle' | t" style="margin-bottom: 24px; display: block">
+            {{ 'booking.staffText' | t }}
+            <div actions><a class="btn btn-primary btn-sm" routerLink="/cabinet/patients">{{ 'booking.openPatients' | t }}</a></div>
           </app-banner>
         }
 
         @if (booked(); as b) {
           <div class="card card-pad">
-            <app-empty-state illustration="success" title="Demande envoyée !"
-              [message]="'Votre demande pour le ' + dayLong(b.startAt) + ' à ' + time(b.startAt) + ' a bien été transmise. Vous recevrez une confirmation par email.'">
-              <a class="btn btn-primary" routerLink="/espace/rendez-vous">Voir mes rendez-vous</a>
-              <button class="btn" (click)="restart()">Nouvelle demande</button>
+            <app-empty-state illustration="success" [title]="'booking.sentTitle' | t"
+              [message]="'booking.sentMessage' | t: { date: dayLong(b.startAt), time: time(b.startAt) }">
+              <a class="btn btn-primary" routerLink="/espace/rendez-vous">{{ 'booking.seeAppointments' | t }}</a>
+              <button class="btn" (click)="restart()">{{ 'booking.newRequest' | t }}</button>
             </app-empty-state>
           </div>
         } @else if (loadError()) {
           <div class="card">
-            <app-empty-state illustration="offline" title="Service momentanément indisponible" [message]="loadError()!">
-              <button class="btn btn-primary" (click)="loadClinic()"><app-icon name="refresh" [size]="16" /> Réessayer</button>
+            <app-empty-state illustration="offline" [title]="'booking.unavailable' | t" [message]="loadError()!">
+              <button class="btn btn-primary" (click)="loadClinic()"><app-icon name="refresh" [size]="16" /> {{ 'common.retry' | t }}</button>
             </app-empty-state>
           </div>
         } @else {
@@ -121,7 +122,7 @@ interface Draft {
                   <button type="button" role="tab" [class.on]="step() === i" [class.done]="step() > i"
                     [disabled]="i > maxStep()" (click)="step.set(i)">
                     <span class="n">@if (step() > i) {<app-icon name="check" [size]="13" [stroke]="3" />} @else {{{ i + 1 }}}</span>
-                    <span class="t">{{ s }}</span>
+                    <span class="t">{{ s | t }}</span>
                   </button>
                 }
               </div>
@@ -131,7 +132,7 @@ interface Draft {
                   @case (0) {
                     <div class="panel stack" style="--gap: 22px">
                       <div>
-                        <h3 style="margin-bottom: 14px">Motif de la consultation</h3>
+                        <h3 style="margin-bottom: 14px">{{ 'booking.reason' | t }}</h3>
                         @if (!clinic()) {
                           <div class="types">
                             @for (i of [1, 2, 3, 4]; track i) {
@@ -142,8 +143,8 @@ interface Draft {
                           <div class="types stagger">
                             @for (t of clinic()!.appointmentTypes; track t.code) {
                               <button type="button" class="type" [class.sel]="draft().type === t.code" (click)="patch({ type: t.code, slot: null })">
-                                <strong>{{ t.label }}</strong>
-                                <span><app-icon name="clock" [size]="13" /> {{ t.durationMinutes }} minutes</span>
+                                <strong>{{ i18n.apptType(t.code) }}</strong>
+                                <span><app-icon name="clock" [size]="13" /> {{ 'common.minutes' | t: { n: t.durationMinutes } }}</span>
                               </button>
                             }
                           </div>
@@ -151,17 +152,17 @@ interface Draft {
                       </div>
                       <div class="form-grid">
                         <div class="field">
-                          <label class="label" for="procedure">Intervention envisagée (facultatif)</label>
+                          <label class="label" for="procedure">{{ 'booking.procedure' | t }}</label>
                           <select id="procedure" class="select" [ngModel]="draft().procedure" (ngModelChange)="patch({ procedure: $event })">
-                            <option value="">— Je ne sais pas encore —</option>
+                            <option value="">{{ 'booking.procedureUnknown' | t }}</option>
                             @for (p of clinic()?.procedures ?? []; track p.code) {
-                              <option [value]="p.code">{{ p.label }}</option>
+                              <option [value]="p.code">{{ i18n.procedure(p.code) }}</option>
                             }
                           </select>
                         </div>
                         @if ((clinic()?.doctors?.length ?? 0) > 1) {
                           <div class="field">
-                            <label class="label" for="doctor">Praticien</label>
+                            <label class="label" for="doctor">{{ 'booking.practitioner' | t }}</label>
                             <select id="doctor" class="select" [ngModel]="draft().doctorId" (ngModelChange)="patch({ doctorId: $event, slot: null })">
                               @for (d of clinic()!.doctors; track d.id) {
                                 <option [value]="d.id">{{ d.name }}</option>
@@ -174,7 +175,7 @@ interface Draft {
                   }
                   @case (1) {
                     <div class="panel">
-                      <h3 style="margin-bottom: 14px">Choisissez une date</h3>
+                      <h3 style="margin-bottom: 14px">{{ 'booking.pickDate' | t }}</h3>
                       <div class="days">
                         @for (d of days(); track d.ymd) {
                           <button type="button" class="day" [class.sel]="draft().date === d.ymd" [disabled]="d.closed" (click)="pickDay(d.ymd)">
@@ -184,9 +185,9 @@ interface Draft {
                           </button>
                         }
                       </div>
-                      <h3 style="margin: 18px 0 6px">Créneaux disponibles</h3>
+                      <h3 style="margin: 18px 0 6px">{{ 'booking.slots' | t }}</h3>
                       @if (!draft().date) {
-                        <p class="muted">Sélectionnez une date pour afficher les créneaux.</p>
+                        <p class="muted">{{ 'booking.pickDateFirst' | t }}</p>
                       } @else if (slotsLoading()) {
                         <div class="slots">
                           @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
@@ -194,17 +195,16 @@ interface Draft {
                           }
                         </div>
                       } @else if (slotsError()) {
-                        <app-empty-state [compact]="true" illustration="error" title="Créneaux indisponibles" [message]="slotsError()!">
-                          <button class="btn btn-sm" (click)="loadSlots()">Réessayer</button>
+                        <app-empty-state [compact]="true" illustration="error" [title]="'booking.slotsError' | t" [message]="slotsError()!">
+                          <button class="btn btn-sm" (click)="loadSlots()">{{ 'common.retry' | t }}</button>
                         </app-empty-state>
                       } @else if (slots().length === 0) {
-                        <app-empty-state [compact]="true" illustration="calendar" title="Aucun créneau ce jour-là"
-                          message="Essayez une autre date : de nouveaux créneaux s'ouvrent régulièrement." />
+                        <app-empty-state [compact]="true" illustration="calendar" [title]="'booking.noSlots' | t" [message]="'booking.noSlotsText' | t" />
                       } @else {
                         <div class="slots">
                           @for (s of slots(); track s.startAt; let i = $index) {
                             <button type="button" class="slot" [class.sel]="draft().slot?.startAt === s.startAt"
-                              [style.animation-delay.ms]="i * 20" (click)="patch({ slot: s })">{{ s.label }}</button>
+                              [style.animation-delay.ms]="i * 20" (click)="patch({ slot: s })">{{ time(s.startAt) }}</button>
                           }
                         </div>
                       }
@@ -215,34 +215,31 @@ interface Draft {
                       @if (!auth.isLoggedIn()) {
                         <div class="gate">
                           <app-illustration kind="lock" [size]="170" />
-                          <h3>Plus qu'une étape</h3>
-                          <p>
-                            Pour confirmer un rendez-vous, un espace patient est nécessaire : il permet au cabinet de vous
-                            contacter et à vous de gérer vos rendez-vous. Votre sélection est conservée.
-                          </p>
+                          <h3>{{ 'booking.gateTitle' | t }}</h3>
+                          <p>{{ 'booking.gateText' | t }}</p>
                           <div class="row" style="justify-content: center; margin-top: 8px">
                             <a class="btn btn-primary" routerLink="/inscription" [queryParams]="{ returnUrl: '/rendez-vous' }">
-                              <app-icon name="user-plus" [size]="16" /> Créer mon compte
+                              <app-icon name="user-plus" [size]="16" /> {{ 'booking.createAccount' | t }}
                             </a>
                             <a class="btn" routerLink="/connexion" [queryParams]="{ returnUrl: '/rendez-vous' }">
-                              <app-icon name="log-in" [size]="16" /> J'ai déjà un compte
+                              <app-icon name="log-in" [size]="16" /> {{ 'booking.haveAccount' | t }}
                             </a>
                           </div>
                           <p class="muted" style="font-size: .82rem; margin-top: 10px">
-                            Une simple question ? <a class="link" routerLink="/contact">Écrivez-nous sans compte</a>.
+                            {{ 'booking.simpleQuestion' | t }} <a class="link" routerLink="/contact">{{ 'booking.writeWithoutAccount' | t }}</a>.
                           </p>
                         </div>
                       } @else {
-                        <h3 style="margin-bottom: 14px">Un mot pour le docteur ?</h3>
+                        <h3 style="margin-bottom: 14px">{{ 'booking.noteTitle' | t }}</h3>
                         <div class="field">
-                          <label class="label" for="note">Message (facultatif)</label>
+                          <label class="label" for="note">{{ 'booking.noteLabel' | t }}</label>
                           <textarea id="note" class="textarea" maxlength="1000" [ngModel]="draft().note" (ngModelChange)="patch({ note: $event })"
-                            placeholder="Vos attentes, antécédents utiles, questions…"></textarea>
-                          <span class="field-hint">Ce message n'est visible que par le cabinet.</span>
+                            [placeholder]="'booking.notePlaceholder' | t"></textarea>
+                          <span class="field-hint">{{ 'booking.noteHint' | t }}</span>
                         </div>
                         @if (auth.role() === 'PATIENT') {
                           <app-banner tone="info" style="display: block; margin-top: 18px">
-                            Votre demande sera <strong>en attente</strong> jusqu'à sa confirmation par le cabinet.
+                            {{ 'booking.pendingInfo' | t }}
                           </app-banner>
                         }
                       }
@@ -252,15 +249,15 @@ interface Draft {
 
                 <div class="nav">
                   <button class="btn btn-ghost" type="button" [style.visibility]="step() > 0 ? 'visible' : 'hidden'" (click)="step.set(step() - 1)">
-                    <app-icon name="arrow-left" [size]="16" /> Retour
+                    <app-icon name="arrow-left" [size]="16" /> {{ 'common.back' | t }}
                   </button>
                   @if (step() < 2) {
                     <button class="btn btn-primary" type="button" [disabled]="maxStep() <= step()" (click)="step.set(step() + 1)">
-                      Continuer <app-icon name="arrow-right" [size]="16" />
+                      {{ 'common.continue' | t }} <app-icon name="arrow-right" [size]="16" />
                     </button>
                   } @else if (auth.role() === 'PATIENT') {
                     <button class="btn btn-accent btn-lg" type="button" [class.is-loading]="submitting()" [disabled]="submitting() || !draft().slot" (click)="confirm()">
-                      <app-icon name="check" [size]="16" /> Confirmer la demande
+                      <app-icon name="check" [size]="16" /> {{ 'booking.confirm' | t }}
                     </button>
                   }
                 </div>
@@ -268,16 +265,16 @@ interface Draft {
             </div>
 
             <aside class="card card-pad summary">
-              <div class="card-title"><h3>Récapitulatif</h3><app-icon name="file" class="muted" /></div>
+              <div class="card-title"><h3>{{ 'booking.summary' | t }}</h3><app-icon name="file" class="muted" /></div>
               <dl>
-                <div><dt>Motif</dt><dd>{{ typeLabel() ?? '—' }}</dd></div>
-                <div><dt>Intervention</dt><dd>{{ procedureLabel() ?? 'Non précisée' }}</dd></div>
-                <div><dt>Date</dt><dd>{{ draft().date ? dayLong(draft().date + 'T12:00:00Z') : '—' }}</dd></div>
+                <div><dt>{{ 'booking.summaryReason' | t }}</dt><dd>{{ draft().type ? i18n.apptType(draft().type) : '—' }}</dd></div>
+                <div><dt>{{ 'booking.summaryProcedure' | t }}</dt><dd>{{ draft().procedure ? i18n.procedure(draft().procedure) : ('booking.notSpecified' | t) }}</dd></div>
+                <div><dt>{{ 'booking.summaryDate' | t }}</dt><dd>{{ draft().date ? dayLong(draft().date + 'T12:00:00Z') : '—' }}</dd></div>
                 <div>
-                  <dt>Heure</dt>
+                  <dt>{{ 'booking.summaryTime' | t }}</dt>
                   <dd>
                     @if (draft().slot) {
-                      <app-badge tone="accent" icon="clock">{{ draft().slot!.label }}</app-badge>
+                      <app-badge tone="accent" icon="clock">{{ time(draft().slot!.startAt) }}</app-badge>
                     } @else {
                       —
                     }
@@ -286,7 +283,7 @@ interface Draft {
               </dl>
               <hr class="divider" />
               <p class="muted" style="font-size: .8rem">
-                Annulation gratuite en ligne jusqu'à 24 h avant le rendez-vous depuis votre espace patient.
+                {{ 'booking.cancelPolicy' | t }}
               </p>
             </aside>
           </div>
@@ -300,11 +297,12 @@ export class BookingPage implements OnInit {
   private publicApi = inject(PublicApi);
   private patientApi = inject(PatientApi);
   private toast = inject(ToastService);
+  protected readonly i18n = inject(I18n);
 
   /** Pre-selection from ?intervention=CODE */
   readonly intervention = input<string>();
 
-  protected readonly stepLabels = ['Motif', 'Date & heure', 'Confirmation'];
+  protected readonly stepLabels: TKey[] = ['booking.stepReason', 'booking.stepDate', 'booking.stepConfirm'];
   protected readonly step = signal(0);
   protected readonly clinic = signal<ClinicInfo | null>(null);
   protected readonly loadError = signal<string | null>(null);
@@ -316,8 +314,6 @@ export class BookingPage implements OnInit {
   protected readonly booked = signal<Appointment | null>(null);
 
   protected readonly maxStep = computed(() => (!this.draft().type ? 0 : !this.draft().slot ? 1 : 2));
-  protected readonly typeLabel = computed(() => this.clinic()?.appointmentTypes.find((t) => t.code === this.draft().type)?.label ?? null);
-  protected readonly procedureLabel = computed(() => this.clinic()?.procedures.find((p) => p.code === this.draft().procedure)?.label ?? null);
 
   protected readonly dayLong = formatDayLong;
   protected readonly time = formatTime;
@@ -328,9 +324,9 @@ export class BookingPage implements OnInit {
     return Array.from({ length: 28 }, (_, i) => {
       const ymd = addDays(todayYmd(), i);
       const d = new Date(`${ymd}T12:00:00Z`);
-      const f = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('fr-FR', { timeZone: 'UTC', ...o }).format(d);
-      const closed = hours[(d.getUTCDay() + 6) % 7]?.hours === 'Fermé';
-      return { ymd, dow: f({ weekday: 'short' }).replace('.', ''), day: f({ day: 'numeric' }), month: f({ month: 'short' }), closed };
+      const h = hours[(d.getUTCDay() + 6) % 7];
+      const closed = !!h && !h.open;
+      return { ymd, dow: formatYmd(ymd, { weekday: 'short' }).replace('.', ''), day: formatYmd(ymd, { day: 'numeric' }), month: formatYmd(ymd, { month: 'short' }), closed };
     });
   });
 
@@ -397,12 +393,12 @@ export class BookingPage implements OnInit {
           this.submitting.set(false);
           this.booked.set(a);
           this.clearDraft();
-          this.toast.success('Demande de rendez-vous envoyée', 'Le cabinet va la confirmer très prochainement.');
+          this.toast.success(this.i18n.t('booking.toastSent'), this.i18n.t('booking.toastSentText'));
           window.scrollTo({ top: 0, behavior: 'smooth' });
         },
         error: (e) => {
           this.submitting.set(false);
-          this.toast.error('Réservation impossible', errorMessage(e));
+          this.toast.error(this.i18n.t('booking.toastError'), errorMessage(e));
           if (errorCode(e) === 'SLOT_UNAVAILABLE') {
             this.step.set(1);
             this.loadSlots();

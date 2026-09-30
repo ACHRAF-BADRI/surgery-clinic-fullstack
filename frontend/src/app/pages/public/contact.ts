@@ -14,10 +14,11 @@ import { EmptyStateComponent } from '../../ui/empty-state';
 import { FieldErrorComponent } from '../../ui/field-error';
 import { IconComponent } from '../../ui/icon';
 import { UnreadService } from '../../core/unread.service';
+import { I18n, TranslatePipe } from '../../core/i18n/i18n';
 
 @Component({
   selector: 'app-contact',
-  imports: [ReactiveFormsModule, RouterLink, BannerComponent, EmptyStateComponent, FieldErrorComponent, IconComponent],
+  imports: [ReactiveFormsModule, RouterLink, BannerComponent, EmptyStateComponent, FieldErrorComponent, IconComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     .layout { display: grid; gap: 40px; align-items: start; }
@@ -35,42 +36,39 @@ import { UnreadService } from '../../core/unread.service';
     <section class="section" style="padding-top: 48px">
       <div class="container layout">
         <div class="side animate-in">
-          <span class="eyebrow">Contact</span>
-          <h1>Écrivez au docteur.</h1>
-          <p class="lead">
-            Une question sur une intervention, un devis, un suivi ? Le cabinet vous répond généralement sous 48 heures ouvrées.
-          </p>
+          <span class="eyebrow">{{ 'contact.eyebrow' | t }}</span>
+          <h1>{{ 'contact.title' | t }}</h1>
+          <p class="lead">{{ 'contact.lead' | t }}</p>
           <div class="info">
-            <a [href]="'tel:' + BRAND.phoneHref"><span class="ic"><app-icon name="phone" /></span><span><small>Téléphone</small>{{ BRAND.phone }}</span></a>
-            <a [href]="'mailto:' + BRAND.email"><span class="ic"><app-icon name="mail" /></span><span><small>Email</small>{{ BRAND.email }}</span></a>
-            <div><span class="ic"><app-icon name="map-pin" /></span><span><small>Adresse</small>{{ BRAND.address }}</span></div>
+            <a [href]="'tel:' + BRAND.phoneHref"><span class="ic"><app-icon name="phone" /></span><span><small>{{ 'contact.phone' | t }}</small>{{ BRAND.phone }}</span></a>
+            <a [href]="'mailto:' + BRAND.email"><span class="ic"><app-icon name="mail" /></span><span><small>{{ 'contact.email' | t }}</small>{{ BRAND.email }}</span></a>
+            <div><span class="ic"><app-icon name="map-pin" /></span><span><small>{{ 'contact.address' | t }}</small>{{ BRAND.address }}</span></div>
           </div>
         </div>
 
         <div class="card card-pad animate-in" style="animation-delay: .1s">
           @if (sent()) {
-            <app-empty-state illustration="success" title="Message envoyé !"
-              [message]="isPatient() ? 'Retrouvez la conversation et la réponse du docteur dans votre messagerie.' : 'Merci ! Le cabinet vous répondra par email à l’adresse indiquée.'">
-              <button class="btn" (click)="reset()">Écrire un autre message</button>
+            <app-empty-state illustration="success" [title]="'contact.sentTitle' | t"
+              [message]="(isPatient() ? 'contact.sentPatient' : 'contact.sentGuest') | t">
+              <button class="btn" (click)="reset()">{{ 'contact.another' | t }}</button>
               @if (!auth.isLoggedIn()) {
-                <a class="btn btn-primary" routerLink="/inscription">Créer mon espace patient</a>
+                <a class="btn btn-primary" routerLink="/inscription">{{ 'contact.createSpace' | t }}</a>
               }
             </app-empty-state>
           } @else if (isStaff()) {
-            <app-banner tone="info" title="Vous êtes connecté en tant que membre du cabinet">
-              Les messages des patients arrivent directement dans votre messagerie.
-              <div actions><a class="btn btn-primary btn-sm" routerLink="/cabinet/messages">Ouvrir la messagerie</a></div>
+            <app-banner tone="info" [title]="'contact.staffTitle' | t">
+              {{ 'contact.staffText' | t }}
+              <div actions><a class="btn btn-primary btn-sm" routerLink="/cabinet/messages">{{ 'contact.openInbox' | t }}</a></div>
             </app-banner>
           } @else {
             <div style="margin-bottom: 22px">
               @if (isPatient()) {
-                <app-banner tone="success" title="Vous êtes connecté" icon="user-check">
-                  Votre message sera ajouté à votre messagerie sécurisée : vous pourrez y suivre la réponse du docteur.
+                <app-banner tone="success" [title]="'contact.patientTitle' | t" icon="user-check">
+                  {{ 'contact.patientText' | t }}
                 </app-banner>
               } @else {
-                <app-banner tone="accent" title="Pas de compte ? Aucun problème." icon="mail" [dismissible]="true">
-                  Envoyez votre message en tant qu'invité : la réponse vous parviendra par email.
-                  Pour suivre vos échanges et prendre rendez-vous, <a class="link" routerLink="/inscription">créez votre espace</a>.
+                <app-banner tone="accent" [title]="'contact.guestTitle' | t" icon="mail" [dismissible]="true">
+                  {{ 'contact.guestText' | t }} <a class="link" routerLink="/inscription">{{ 'contact.guestLink' | t }}</a>.
                 </app-banner>
               }
             </div>
@@ -79,65 +77,64 @@ import { UnreadService } from '../../core/unread.service';
               @if (!isPatient()) {
                 <div class="form-grid">
                   <div class="field">
-                    <label class="label" for="name">Nom complet <span class="req">*</span></label>
+                    <label class="label" for="name">{{ 'contact.fullName' | t }} <span class="req">*</span></label>
                     <input id="name" class="input" formControlName="name" autocomplete="name" />
-                    <app-field-error [control]="form.controls.name" label="Le nom" />
+                    <app-field-error [control]="form.controls.name" />
                   </div>
                   <div class="field">
-                    <label class="label" for="email">Email <span class="req">*</span></label>
+                    <label class="label" for="email">{{ 'contact.email' | t }} <span class="req">*</span></label>
                     <input id="email" class="input" type="email" formControlName="email" autocomplete="email" />
-                    <app-field-error [control]="form.controls.email" label="L'email" />
+                    <app-field-error [control]="form.controls.email" />
                   </div>
                   <div class="field">
-                    <label class="label" for="phone">Téléphone</label>
+                    <label class="label" for="phone">{{ 'contact.phone' | t }}</label>
                     <input id="phone" class="input" type="tel" formControlName="phone" autocomplete="tel" />
                     <app-field-error [control]="form.controls.phone" />
                   </div>
                   <div class="field">
-                    <label class="label" for="procedure">Intervention concernée</label>
+                    <label class="label" for="procedure">{{ 'contact.procedure' | t }}</label>
                     <select id="procedure" class="select" formControlName="procedure">
-                      <option value="">— Aucune en particulier —</option>
+                      <option value="">{{ 'contact.noProcedure' | t }}</option>
                       @for (p of procedures(); track p.code) {
-                        <option [value]="p.code">{{ p.label }}</option>
+                        <option [value]="p.code">{{ i18n.procedure(p.code) }}</option>
                       }
                     </select>
                   </div>
                 </div>
               } @else {
                 <div class="field">
-                  <label class="label" for="procedure">Intervention concernée</label>
+                  <label class="label" for="procedure">{{ 'contact.procedure' | t }}</label>
                   <select id="procedure" class="select" formControlName="procedure">
-                    <option value="">— Aucune en particulier —</option>
+                    <option value="">{{ 'contact.noProcedure' | t }}</option>
                     @for (p of procedures(); track p.code) {
-                      <option [value]="p.code">{{ p.label }}</option>
+                      <option [value]="p.code">{{ i18n.procedure(p.code) }}</option>
                     }
                   </select>
                 </div>
               }
               <div class="field">
-                <label class="label" for="subject">Sujet <span class="req">*</span></label>
-                <input id="subject" class="input" formControlName="subject" placeholder="Ex. : Question sur la rhinoplastie" />
-                <app-field-error [control]="form.controls.subject" label="Le sujet" />
+                <label class="label" for="subject">{{ 'contact.subject' | t }} <span class="req">*</span></label>
+                <input id="subject" class="input" formControlName="subject" [placeholder]="'contact.subjectPlaceholder' | t" />
+                <app-field-error [control]="form.controls.subject" />
               </div>
               <div class="field">
-                <label class="label" for="body">Message <span class="req">*</span></label>
-                <textarea id="body" class="textarea" formControlName="body" rows="6"
-                  placeholder="Décrivez votre demande. N'indiquez pas d'informations médicales sensibles si vous n'êtes pas connecté."></textarea>
+                <label class="label" for="body">{{ 'contact.message' | t }} <span class="req">*</span></label>
+                <textarea id="body" class="textarea" formControlName="body" rows="6" [placeholder]="'contact.messagePlaceholder' | t"></textarea>
                 <div class="row" style="justify-content: space-between">
-                  <app-field-error [control]="form.controls.body" label="Le message" />
+                  <app-field-error [control]="form.controls.body" />
                   <span class="counter">{{ form.controls.body.value.length }} / 5000</span>
                 </div>
               </div>
               <div class="honeypot" aria-hidden="true">
-                <label for="website">Site web</label>
+                <label for="website">Website</label>
                 <input id="website" formControlName="website" tabindex="-1" autocomplete="off" />
               </div>
               <p class="muted" style="font-size: .78rem">
-                En envoyant ce message, vous acceptez que vos données soient utilisées par le cabinet pour vous répondre.
+                {{ 'contact.consent' | t }}
               </p>
               <div class="row">
                 <button class="btn btn-primary btn-lg" type="submit" [class.is-loading]="sending()" [disabled]="sending()">
-                  <app-icon name="send" [size]="16" /> Envoyer le message
+                  <app-icon name="send" [size]="16" /> {{ 'contact.send' | t }}
                 </button>
               </div>
             </form>
@@ -155,6 +152,7 @@ export class ContactPage {
   private toast = inject(ToastService);
   private router = inject(Router);
   private unread = inject(UnreadService);
+  protected readonly i18n = inject(I18n);
 
   protected readonly isPatient = computed(() => this.auth.role() === 'PATIENT');
   protected readonly isStaff = computed(() => this.auth.role() === 'DOCTOR' || this.auth.role() === 'ADMIN');
@@ -190,7 +188,7 @@ export class ContactPage {
     if (this.isPatient()) {
       this.patientApi.newThread({ subject: v.subject, procedure: v.procedure || null, body: v.body }).subscribe({
         next: (d) => {
-          this.toast.success('Message envoyé', 'Le docteur a été notifié.');
+          this.toast.success(this.i18n.t('contact.sentTitle'), this.i18n.t('contact.toastDoctorNotified'));
           this.unread.refresh();
           this.router.navigate(['/espace/messages', d.thread.id]);
         },
@@ -202,7 +200,7 @@ export class ContactPage {
       next: () => {
         this.sending.set(false);
         this.sent.set(true);
-        this.toast.success('Message envoyé', 'Le cabinet vous répondra par email.');
+        this.toast.success(this.i18n.t('contact.sentTitle'), this.i18n.t('contact.toastEmailReply'));
       },
       error: (e) => this.fail(e),
     });
@@ -216,6 +214,6 @@ export class ContactPage {
   private fail(e: unknown) {
     this.sending.set(false);
     applyServerErrors(this.form, e);
-    this.toast.error("Le message n'a pas pu être envoyé", errorMessage(e));
+    this.toast.error(this.i18n.t('contact.toastError'), errorMessage(e));
   }
 }

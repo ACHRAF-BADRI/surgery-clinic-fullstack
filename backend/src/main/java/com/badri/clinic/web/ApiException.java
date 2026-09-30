@@ -6,6 +6,8 @@ public class ApiException extends RuntimeException {
 
     private final HttpStatus status;
     private final String code;
+    /** Optional raw value (e.g. a restriction reason) that clients can embed in a translated message. */
+    private String detail;
 
     public ApiException(HttpStatus status, String code, String message) {
         super(message);
@@ -16,6 +18,13 @@ public class ApiException extends RuntimeException {
     public HttpStatus status() { return status; }
 
     public String code() { return code; }
+
+    public String detail() { return detail; }
+
+    public ApiException withDetail(String detail) {
+        this.detail = detail;
+        return this;
+    }
 
     public static ApiException notFound(String what) {
         return new ApiException(HttpStatus.NOT_FOUND, "NOT_FOUND", what + " introuvable.");

@@ -12,33 +12,34 @@ import { BannerComponent } from '../../ui/banner';
 import { IconComponent } from '../../ui/icon';
 import { ModalComponent } from '../../ui/modal';
 import { SlotPickerComponent } from './slot-picker';
+import { I18n, TranslatePipe } from '../../core/i18n/i18n';
 
 /** Appointment rescheduling by the doctor. */
 @Component({
   selector: 'app-reschedule-modal',
-  imports: [FormsModule, ModalComponent, SlotPickerComponent, IconComponent, BannerComponent],
+  imports: [FormsModule, ModalComponent, SlotPickerComponent, IconComponent, BannerComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <app-modal [open]="!!appointment()" title="Déplacer le rendez-vous" width="620px"
-      [subtitle]="appointment() ? appointment()!.patient.name + ' · actuellement ' + when(appointment()!.startAt) : ''" (closed)="closed.emit()">
+    <app-modal [open]="!!appointment()" [title]="'reschedule.title' | t" width="620px"
+      [subtitle]="appointment() ? ('reschedule.subtitle' | t: { name: appointment()!.patient.name, when: when(appointment()!.startAt) }) : ''" (closed)="closed.emit()">
       @if (appointment(); as a) {
         <div class="stack" style="--gap: 18px">
           <app-slot-picker [type]="a.type" [excludeId]="a.id" [(date)]="date" [(value)]="value" />
           <div class="field">
-            <label class="label" for="rs-reason">Motif (note interne)</label>
-            <input id="rs-reason" class="input" [(ngModel)]="reason" placeholder="Ex. : bloc opératoire décalé" maxlength="300" />
+            <label class="label" for="rs-reason">{{ 'reschedule.reason' | t }}</label>
+            <input id="rs-reason" class="input" [(ngModel)]="reason" [placeholder]="'reschedule.reasonPlaceholder' | t" maxlength="300" />
           </div>
           @if (a.patient.email) {
-            <label class="check"><input type="checkbox" [(ngModel)]="notify" /> Prévenir le patient par email ({{ a.patient.email }})</label>
+            <label class="check"><input type="checkbox" [(ngModel)]="notify" /> {{ 'reschedule.notify' | t: { email: a.patient.email } }}</label>
           } @else {
-            <app-banner tone="warning" icon="phone">Ce patient n'a pas d'email : pensez à le prévenir par téléphone{{ a.patient.phone ? ' (' + a.patient.phone + ')' : '' }}.</app-banner>
+            <app-banner tone="warning" icon="phone">{{ 'reschedule.noEmail' | t }}{{ a.patient.phone ? ' (' + a.patient.phone + ')' : '' }}</app-banner>
           }
         </div>
       }
       <ng-container footer>
-        <button class="btn btn-ghost" type="button" (click)="closed.emit()">Annuler</button>
+        <button class="btn btn-ghost" type="button" (click)="closed.emit()">{{ 'common.cancel' | t }}</button>
         <button class="btn btn-primary" type="button" [disabled]="!value() || saving()" [class.is-loading]="saving()" (click)="save()">
-          <app-icon name="calendar-clock" [size]="16" /> Déplacer
+          <app-icon name="calendar-clock" [size]="16" /> {{ 'reschedule.submit' | t }}
         </button>
       </ng-container>
     </app-modal>
@@ -47,6 +48,7 @@ import { SlotPickerComponent } from './slot-picker';
 export class RescheduleModalComponent {
   private api = inject(DoctorApi);
   private toast = inject(ToastService);
+  private i18n = inject(I18n);
   readonly appointment = input<Appointment | null>(null);
   readonly done = output<Appointment>();
   readonly closed = output<void>();
@@ -69,12 +71,12 @@ export class RescheduleModalComponent {
     this.api.reschedule(a.id, v, this.reason(), this.notify()).subscribe({
       next: (updated) => {
         this.saving.set(false);
-        this.toast.success('Rendez-vous déplacé', `Nouveau créneau : ${formatDateTime(updated.startAt)}`);
+        this.toast.success(this.i18n.t('reschedule.toastDone'), this.i18n.t('reschedule.toastDoneText', { when: formatDateTime(updated.startAt) }));
         this.done.emit(updated);
       },
       error: (e) => {
         this.saving.set(false);
-        this.toast.error('Déplacement impossible', errorMessage(e));
+        this.toast.error(this.i18n.t('reschedule.toastError'), errorMessage(e));
       },
     });
   }
@@ -83,7 +85,7 @@ export class RescheduleModalComponent {
 /** Appointment booking by the doctor, for a patient with or without an account. */
 @Component({
   selector: 'app-book-modal',
-  imports: [FormsModule, ModalComponent, SlotPickerComponent, IconComponent, AvatarComponent, BadgeComponent, BannerComponent],
+  imports: [FormsModule, ModalComponent, SlotPickerComponent, IconComponent, AvatarComponent, BadgeComponent, BannerComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     .results { border: 1px solid var(--border); border-radius: 12px; max-height: 220px; overflow-y: auto; margin-top: 6px; }
@@ -95,28 +97,28 @@ export class RescheduleModalComponent {
     .picked { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--border); }
   `,
   template: `
-    <app-modal [open]="open()" title="Planifier un rendez-vous" subtitle="Le rendez-vous est directement confirmé." width="660px" (closed)="closed.emit()">
+    <app-modal [open]="open()" [title]="'book.title' | t" [subtitle]="'book.subtitle' | t" width="660px" (closed)="closed.emit()">
       <div class="stack" style="--gap: 18px">
         <div class="field">
-          <span class="label">Patient</span>
+          <span class="label">{{ 'book.patient' | t }}</span>
           @if (selected(); as p) {
             <div class="picked">
               <app-avatar [name]="p.firstName + ' ' + p.lastName" [size]="38" />
               <div style="flex: 1">
                 <div style="font-weight: 700">{{ p.firstName }} {{ p.lastName }}</div>
-                <div class="muted" style="font-size: .8rem">{{ p.email || p.phone || 'Aucune coordonnée' }}</div>
+                <div class="muted" style="font-size: .8rem">{{ p.email || p.phone || ('book.noContact' | t) }}</div>
               </div>
               @if (!p.hasAccount) {
-                <app-badge tone="warning" icon="user-x" size="sm">Sans compte</app-badge>
+                <app-badge tone="warning" icon="user-x" size="sm">{{ 'badges.noAccount' | t }}</app-badge>
               }
               @if (!patient()) {
-                <button class="btn btn-ghost btn-sm" type="button" (click)="selected.set(null)">Changer</button>
+                <button class="btn btn-ghost btn-sm" type="button" (click)="selected.set(null)">{{ 'book.change' | t }}</button>
               }
             </div>
           } @else {
             <div class="input-icon">
               <app-icon name="search" [size]="17" />
-              <input class="input" placeholder="Rechercher par nom, email ou téléphone…" [ngModel]="query()" (ngModelChange)="search($event)" />
+              <input class="input" [placeholder]="'book.searchPlaceholder' | t" [ngModel]="query()" (ngModelChange)="search($event)" />
             </div>
             @if (results().length) {
               <div class="results">
@@ -125,32 +127,32 @@ export class RescheduleModalComponent {
                     <app-avatar [name]="p.firstName + ' ' + p.lastName" [size]="32" />
                     <span style="flex: 1"><span class="n">{{ p.firstName }} {{ p.lastName }}</span><br /><span class="s">{{ p.email || p.phone || '—' }}</span></span>
                     @if (!p.hasAccount) {
-                      <app-badge tone="warning" size="sm">Sans compte</app-badge>
+                      <app-badge tone="warning" size="sm">{{ 'badges.noAccount' | t }}</app-badge>
                     }
                   </button>
                 }
               </div>
             } @else if (query().length >= 2) {
-              <span class="field-hint">Aucun patient trouvé. Créez d'abord le dossier depuis la page Patients.</span>
+              <span class="field-hint">{{ 'book.noResult' | t }}</span>
             }
           }
         </div>
 
         <div class="form-grid">
           <div class="field">
-            <label class="label" for="bk-type">Motif</label>
+            <label class="label" for="bk-type">{{ 'booking.summaryReason' | t }}</label>
             <select id="bk-type" class="select" [(ngModel)]="type">
               @for (t of types(); track t.code) {
-                <option [value]="t.code">{{ t.label }} ({{ t.durationMinutes }} min)</option>
+                <option [value]="t.code">{{ i18n.apptType(t.code) }} ({{ t.durationMinutes }} min)</option>
               }
             </select>
           </div>
           <div class="field">
-            <label class="label" for="bk-proc">Intervention</label>
+            <label class="label" for="bk-proc">{{ 'booking.summaryProcedure' | t }}</label>
             <select id="bk-proc" class="select" [(ngModel)]="procedure">
-              <option value="">— Aucune —</option>
+              <option value="">{{ 'common.none' | t }}</option>
               @for (p of procedures(); track p.code) {
-                <option [value]="p.code">{{ p.label }}</option>
+                <option [value]="p.code">{{ i18n.procedure(p.code) }}</option>
               }
             </select>
           </div>
@@ -159,21 +161,21 @@ export class RescheduleModalComponent {
         <app-slot-picker [type]="type()" [(date)]="date" [(value)]="value" />
 
         <div class="field">
-          <label class="label" for="bk-note">Note interne</label>
+          <label class="label" for="bk-note">{{ 'book.note' | t }}</label>
           <textarea id="bk-note" class="textarea" style="min-height: 80px" [(ngModel)]="note" maxlength="1000"></textarea>
         </div>
         @if (selected(); as p) {
           @if (p.email) {
-            <label class="check"><input type="checkbox" [(ngModel)]="notify" /> Envoyer une confirmation par email ({{ p.email }})</label>
+            <label class="check"><input type="checkbox" [(ngModel)]="notify" /> {{ 'book.notify' | t: { email: p.email } }}</label>
           } @else {
-            <app-banner tone="warning" icon="phone">Patient sans email : la confirmation devra se faire par téléphone.</app-banner>
+            <app-banner tone="warning" icon="phone">{{ 'book.noEmail' | t }}</app-banner>
           }
         }
       </div>
       <ng-container footer>
-        <button class="btn btn-ghost" type="button" (click)="closed.emit()">Annuler</button>
+        <button class="btn btn-ghost" type="button" (click)="closed.emit()">{{ 'common.cancel' | t }}</button>
         <button class="btn btn-primary" type="button" [disabled]="!selected() || !value() || saving()" [class.is-loading]="saving()" (click)="save()">
-          <app-icon name="calendar-plus" [size]="16" /> Planifier
+          <app-icon name="calendar-plus" [size]="16" /> {{ 'book.submit' | t }}
         </button>
       </ng-container>
     </app-modal>
@@ -182,6 +184,7 @@ export class RescheduleModalComponent {
 export class BookModalComponent {
   private api = inject(DoctorApi);
   private toast = inject(ToastService);
+  protected readonly i18n = inject(I18n);
   readonly open = input(false);
   /** Fixed patient (when opened from their record). */
   readonly patient = input<Patient | null>(null);
@@ -241,12 +244,12 @@ export class BookModalComponent {
       .subscribe({
         next: (a) => {
           this.saving.set(false);
-          this.toast.success('Rendez-vous planifié', `${a.patient.name} · ${formatDateTime(a.startAt)}`);
+          this.toast.success(this.i18n.t('book.toastDone'), `${a.patient.name} · ${formatDateTime(a.startAt)}`);
           this.done.emit(a);
         },
         error: (e) => {
           this.saving.set(false);
-          this.toast.error('Planification impossible', errorMessage(e));
+          this.toast.error(this.i18n.t('book.toastError'), errorMessage(e));
         },
       });
   }

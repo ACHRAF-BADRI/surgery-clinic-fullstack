@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, signal, effect, untracked } from '@angular/core';
 import { DoctorApi } from '../../core/api';
-import { addDays, errorMessage, formatDayLong, STATUS_LABELS, todayYmd, ymdInZone, zonedToInstant } from '../../core/format';
+import { addDays, errorMessage, formatDayLong, formatYmd, todayYmd, ymdInZone, zonedToInstant } from '../../core/format';
+import { I18n, TranslatePipe } from '../../core/i18n/i18n';
 import { Appointment, AppointmentStatus } from '../../core/models';
 import { AppointmentItemComponent } from '../../ui/appointment-item';
 import { EmptyStateComponent } from '../../ui/empty-state';
@@ -17,7 +18,7 @@ function mondayOf(ymd: string) {
 
 @Component({
   selector: 'app-agenda',
-  imports: [AppointmentItemComponent, EmptyStateComponent, IconComponent, SkeletonListComponent, BookModalComponent, RescheduleModalComponent],
+  imports: [AppointmentItemComponent, EmptyStateComponent, IconComponent, SkeletonListComponent, BookModalComponent, RescheduleModalComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 16px; }
@@ -41,21 +42,21 @@ function mondayOf(ymd: string) {
   `,
   template: `
     <div class="page-head">
-      <div><h1>Agenda</h1><p>Confirmez, déplacez ou planifiez les rendez-vous de vos patients.</p></div>
-      <button class="btn btn-primary" (click)="booking.set(true)"><app-icon name="calendar-plus" [size]="17" /> Nouveau rendez-vous</button>
+      <div><h1>{{ 'agenda.title' | t }}</h1><p>{{ 'agenda.subtitle' | t }}</p></div>
+      <button class="btn btn-primary" (click)="booking.set(true)"><app-icon name="calendar-plus" [size]="17" /> {{ 'myAppointments.new' | t }}</button>
     </div>
 
     <div class="toolbar">
       <div class="row" style="--gap: 8px">
-        <button class="btn btn-icon" (click)="shift(-7)" aria-label="Semaine précédente"><app-icon name="chevron-left" /></button>
-        <button class="btn btn-sm" (click)="goToday()">Aujourd'hui</button>
-        <button class="btn btn-icon" (click)="shift(7)" aria-label="Semaine suivante"><app-icon name="chevron-right" /></button>
+        <button class="btn btn-icon" (click)="shift(-7)" [attr.aria-label]="'agenda.prevWeek' | t"><app-icon name="chevron-left" /></button>
+        <button class="btn btn-sm" (click)="goToday()">{{ 'agenda.today' | t }}</button>
+        <button class="btn btn-icon" (click)="shift(7)" [attr.aria-label]="'agenda.nextWeek' | t"><app-icon name="chevron-right" /></button>
         <span class="range">{{ rangeLabel() }}</span>
       </div>
-      <div class="segmented" role="tablist" aria-label="Filtrer par statut">
-        <button [class.active]="status() === ''" (click)="status.set('')">Tous</button>
+      <div class="segmented" role="tablist" [attr.aria-label]="'agenda.filterStatus' | t">
+        <button [class.active]="status() === ''" (click)="status.set('')">{{ 'agenda.all' | t }}</button>
         @for (s of statuses; track s) {
-          <button [class.active]="status() === s" (click)="status.set(s)">{{ labels[s] }}</button>
+          <button [class.active]="status() === s" (click)="status.set(s)">{{ i18n.status(s) }}</button>
         }
       </div>
     </div>
@@ -75,40 +76,40 @@ function mondayOf(ymd: string) {
       <app-skeleton-list [count]="5" />
     } @else if (error()) {
       <div class="card">
-        <app-empty-state illustration="error" title="Agenda indisponible" [message]="error()!">
-          <button class="btn btn-primary" (click)="load()"><app-icon name="refresh" [size]="16" /> Réessayer</button>
+        <app-empty-state illustration="error" [title]="'agenda.error' | t" [message]="error()!">
+          <button class="btn btn-primary" (click)="load()"><app-icon name="refresh" [size]="16" /> {{ 'common.retry' | t }}</button>
         </app-empty-state>
       </div>
     } @else if (groups().length === 0) {
       <div class="card">
-        <app-empty-state illustration="calendar" title="Aucun rendez-vous"
-          [message]="status() ? 'Aucun rendez-vous « ' + labels[status() || 'PENDING'] + ' » sur cette période.' : 'Rien de prévu sur cette période.'">
-          <button class="btn btn-primary" (click)="booking.set(true)">Planifier un rendez-vous</button>
+        <app-empty-state illustration="calendar" [title]="'agenda.emptyTitle' | t"
+          [message]="status() ? ('agenda.emptyStatus' | t: { status: i18n.status(status()) }) : ('agenda.emptyText' | t)">
+          <button class="btn btn-primary" (click)="booking.set(true)">{{ 'book.title' | t }}</button>
         </app-empty-state>
       </div>
     } @else {
       @for (g of groups(); track g.ymd) {
-        <div class="day-h"><h3>{{ g.label }}</h3><span>{{ g.items.length }} rendez-vous</span></div>
+        <div class="day-h"><h3>{{ g.label }}</h3><span>{{ 'agenda.count' | t: { n: g.items.length } }}</span></div>
         <div class="list stagger">
           @for (a of g.items; track a.id) {
             <app-appointment-item [appointment]="a" [showPatient]="true">
               @switch (a.status) {
                 @case ('PENDING') {
-                  <button class="btn btn-sm btn-accent" (click)="act(a, 'CONFIRMED')"><app-icon name="check" [size]="14" /> Confirmer</button>
-                  <button class="btn btn-sm" (click)="rescheduling.set(a)"><app-icon name="calendar-clock" [size]="14" /> Déplacer</button>
-                  <button class="btn btn-sm btn-danger btn-icon" (click)="act(a, 'CANCELLED')" title="Refuser" aria-label="Refuser"><app-icon name="x" [size]="14" /></button>
+                  <button class="btn btn-sm btn-accent" (click)="act(a, 'CONFIRMED')"><app-icon name="check" [size]="14" /> {{ 'common.confirm' | t }}</button>
+                  <button class="btn btn-sm" (click)="rescheduling.set(a)"><app-icon name="calendar-clock" [size]="14" /> {{ 'reschedule.submit' | t }}</button>
+                  <button class="btn btn-sm btn-danger btn-icon" (click)="act(a, 'CANCELLED')" [title]="'doctorDashboard.decline' | t" [attr.aria-label]="'doctorDashboard.decline' | t"><app-icon name="x" [size]="14" /></button>
                 }
                 @case ('CONFIRMED') {
                   @if (isPast(a)) {
-                    <button class="btn btn-sm" (click)="act(a, 'COMPLETED')"><app-icon name="check-circle" [size]="14" /> Terminé</button>
-                    <button class="btn btn-sm" (click)="act(a, 'NO_SHOW')"><app-icon name="user-x" [size]="14" /> Absent</button>
+                    <button class="btn btn-sm" (click)="act(a, 'COMPLETED')"><app-icon name="check-circle" [size]="14" /> {{ 'agenda.completed' | t }}</button>
+                    <button class="btn btn-sm" (click)="act(a, 'NO_SHOW')"><app-icon name="user-x" [size]="14" /> {{ 'agenda.noShow' | t }}</button>
                   } @else {
-                    <button class="btn btn-sm" (click)="rescheduling.set(a)"><app-icon name="calendar-clock" [size]="14" /> Déplacer</button>
+                    <button class="btn btn-sm" (click)="rescheduling.set(a)"><app-icon name="calendar-clock" [size]="14" /> {{ 'reschedule.submit' | t }}</button>
                   }
-                  <button class="btn btn-sm btn-danger btn-icon" (click)="act(a, 'CANCELLED')" title="Annuler" aria-label="Annuler"><app-icon name="x" [size]="14" /></button>
+                  <button class="btn btn-sm btn-danger btn-icon" (click)="act(a, 'CANCELLED')" [title]="'common.cancel' | t" [attr.aria-label]="'common.cancel' | t"><app-icon name="x" [size]="14" /></button>
                 }
                 @default {
-                  <button class="btn btn-sm btn-ghost btn-icon" (click)="remove(a)" title="Supprimer" aria-label="Supprimer"><app-icon name="trash" [size]="14" /></button>
+                  <button class="btn btn-sm btn-ghost btn-icon" (click)="remove(a)" [title]="'common.delete' | t" [attr.aria-label]="'common.delete' | t"><app-icon name="trash" [size]="14" /></button>
                 }
               }
             </app-appointment-item>
@@ -127,7 +128,7 @@ export class AgendaPage {
   /** Initial filter from ?statut=PENDING */
   readonly statut = input<string>();
 
-  protected readonly labels = STATUS_LABELS;
+  protected readonly i18n = inject(I18n);
   protected readonly statuses: AppointmentStatus[] = ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'];
   protected readonly todayStr = todayYmd();
   protected readonly weekStart = signal(mondayOf(todayYmd()));
@@ -147,7 +148,7 @@ export class AgendaPage {
       const d = new Date(`${ymd}T12:00:00Z`);
       return {
         ymd,
-        dow: new Intl.DateTimeFormat('fr-FR', { weekday: 'short', timeZone: 'UTC' }).format(d).replace('.', ''),
+        dow: formatYmd(ymd, { weekday: 'short' }).replace('.', ''),
         num: d.getUTCDate(),
         count: this.filtered().filter((a) => ymdInZone(a.startAt) === ymd).length,
       };
@@ -167,7 +168,7 @@ export class AgendaPage {
   });
 
   protected readonly rangeLabel = computed(() => {
-    const f = (ymd: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('fr-FR', { timeZone: 'UTC', ...o }).format(new Date(`${ymd}T12:00:00Z`));
+    const f = formatYmd;
     const end = addDays(this.weekStart(), 6);
     return `${f(this.weekStart(), { day: 'numeric', month: 'short' })} – ${f(end, { day: 'numeric', month: 'short', year: 'numeric' })}`;
   });

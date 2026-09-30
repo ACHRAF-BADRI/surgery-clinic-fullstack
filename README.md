@@ -11,7 +11,7 @@
 
 Three roles: **patient**, **doctor**, **admin**. Visitors without an account can browse the site and contact the clinic.
 
-The user interface is in French; the code and its comments are in English.
+The user interface is available in **French and English** (live switch, remembered per browser); the code and its comments are in English.
 
 | Part | Stack | Hosting |
 |---|---|---|
@@ -49,6 +49,20 @@ The user interface is in French; the code and its comments are in English.
 **Emails (Resend)**: new appointment request, new message, cancellation by a patient (to the doctor); acknowledgement, confirmation, rescheduling, cancellation, reply, invitation, welcome, password reset (to the patient).
 
 **UI**: light / dark / system theme (animated toggle), responsive layout, stacked toasts (pause on hover, swipe to dismiss), badges, banners, skeleton loaders, illustrations for empty and error states, page transitions (View Transitions API), `prefers-reduced-motion` respected.
+
+**Languages (FR / EN)**: FR | EN switch in the header and in signed-in areas; the first visit follows the browser language. Dates, times, statuses, procedures, validation messages, toasts, page titles and API error codes are all translated.
+
+## Translations
+
+The dictionaries live in `frontend/src/app/core/i18n/`:
+
+- `fr.ts`: French, the reference dictionary.
+- `en.ts`: English. It must have exactly the same keys: a missing or extra key fails the build.
+- `i18n.ts`: `I18n` service, `t` pipe and translated page titles.
+
+Use a key in a template with `{{ 'home.hero.title' | t }}`, or with parameters: `{{ 'agenda.count' | t: { n: 3 } }}`. In TypeScript, use `inject(I18n).t('key')`. Keys are typed: a typo is a compile error.
+
+The API returns stable error codes (`SLOT_UNAVAILABLE`, `EMAIL_TAKEN`…) and codes for statuses, procedures and days; the frontend translates them. Emails sent by the backend are currently in French.
 
 ## Getting started
 

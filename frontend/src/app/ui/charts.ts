@@ -75,7 +75,7 @@ export interface ChartDatum {
 })
 export class BarChartComponent {
   readonly data = input.required<ChartDatum[]>();
-  readonly ariaLabel = input('Graphique');
+  readonly ariaLabel = input('Chart');
   readonly unit = input('');
   readonly highlightCurrent = input(false);
 

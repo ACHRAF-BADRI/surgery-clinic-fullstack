@@ -14,10 +14,8 @@ import com.badri.clinic.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
-import java.time.format.TextStyle;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 
 @Service
 public class CatalogService {
@@ -35,9 +33,9 @@ public class CatalogService {
                 .map(u -> new DoctorDto(u.getId(), "Dr " + u.fullName())).toList();
         List<OpeningHours> hours = Arrays.stream(DayOfWeek.values()).map(d -> {
             String h = props.schedule().hours().getOrDefault(d, "");
-            String day = d.getDisplayName(TextStyle.FULL, Locale.FRENCH);
-            return new OpeningHours(Character.toUpperCase(day.charAt(0)) + day.substring(1),
-                    h == null || h.isBlank() ? "Fermé" : h.replace("-", " – ").replace(":", "h"));
+            if (h == null || h.isBlank()) return new OpeningHours(d.name(), null, null);
+            String[] range = h.split("-");
+            return new OpeningHours(d.name(), range[0].trim(), range[1].trim());
         }).toList();
         return new ClinicInfo(props.clinicName(), props.timeZone(), doctors,
                 Arrays.stream(Procedure.values()).map(ProcedureDto::of).toList(),

@@ -8,32 +8,32 @@ import { EmptyStateComponent } from '../../ui/empty-state';
 import { FieldErrorComponent } from '../../ui/field-error';
 import { IconComponent } from '../../ui/icon';
 import { AuthFrameComponent } from './auth-frame';
+import { I18n, TranslatePipe } from '../../core/i18n/i18n';
 
 @Component({
   selector: 'app-forgot-password',
-  imports: [ReactiveFormsModule, RouterLink, AuthFrameComponent, FieldErrorComponent, IconComponent, EmptyStateComponent],
+  imports: [ReactiveFormsModule, RouterLink, AuthFrameComponent, FieldErrorComponent, IconComponent, EmptyStateComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <app-auth-frame title="Mot de passe oublié" subtitle="Recevez un lien sécurisé pour choisir un nouveau mot de passe ou activer votre compte.">
+    <app-auth-frame title="auth.forgot.title" subtitle="auth.forgot.subtitle">
       @if (sent()) {
-        <app-empty-state illustration="messages" [compact]="true" title="Vérifiez votre boîte mail"
-          message="Si un compte ou un dossier correspond à cette adresse, un lien valable 24 h vient de vous être envoyé.">
-          <a class="btn" routerLink="/connexion">Retour à la connexion</a>
+        <app-empty-state illustration="messages" [compact]="true" [title]="'auth.forgot.sentTitle' | t" [message]="'auth.forgot.sentText' | t">
+          <a class="btn" routerLink="/connexion">{{ 'auth.forgot.backToLogin' | t }}</a>
         </app-empty-state>
       } @else {
         <form class="stack" style="--gap: 18px" [formGroup]="form" (ngSubmit)="submit()" novalidate>
           <div class="field">
-            <label class="label" for="email">Email</label>
+            <label class="label" for="email">{{ 'common.email' | t }}</label>
             <div class="input-icon">
               <app-icon name="mail" [size]="17" />
               <input id="email" class="input" type="email" formControlName="email" autocomplete="email" />
             </div>
-            <app-field-error [control]="form.controls.email" label="L'email" />
+            <app-field-error [control]="form.controls.email" />
           </div>
           <button class="btn btn-primary btn-lg btn-block" type="submit" [class.is-loading]="loading()" [disabled]="loading()">
-            Envoyer le lien <app-icon name="send" [size]="16" />
+            {{ 'auth.forgot.submit' | t }} <app-icon name="send" [size]="16" />
           </button>
-          <p class="muted" style="text-align: center; font-size: .9rem"><a class="link" routerLink="/connexion">Retour à la connexion</a></p>
+          <p class="muted" style="text-align: center; font-size: .9rem"><a class="link" routerLink="/connexion">{{ 'auth.forgot.backToLogin' | t }}</a></p>
         </form>
       }
     </app-auth-frame>
@@ -42,6 +42,7 @@ import { AuthFrameComponent } from './auth-frame';
 export class ForgotPasswordPage implements OnInit {
   private auth = inject(AuthService);
   private toast = inject(ToastService);
+  protected readonly i18n = inject(I18n);
   readonly email = input<string>();
   protected readonly loading = signal(false);
   protected readonly sent = signal(false);
@@ -64,7 +65,7 @@ export class ForgotPasswordPage implements OnInit {
       },
       error: (e) => {
         this.loading.set(false);
-        this.toast.error('Envoi impossible', errorMessage(e));
+        this.toast.error(this.i18n.t('auth.forgot.toastError'), errorMessage(e));
       },
     });
   }

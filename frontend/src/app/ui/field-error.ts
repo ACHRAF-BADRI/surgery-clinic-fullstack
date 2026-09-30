@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
 import { AbstractControl } from '@angular/forms';
+import { currentLang, translate } from '../core/i18n/i18n';
 
 /** Error message for a reactive form field (shown after interaction). */
 @Component({
@@ -13,7 +14,6 @@ import { AbstractControl } from '@angular/forms';
 })
 export class FieldErrorComponent {
   readonly control = input.required<AbstractControl>();
-  readonly label = input('Ce champ');
   private tick = signal(0);
 
   constructor() {
@@ -29,14 +29,15 @@ export class FieldErrorComponent {
     const c = this.control();
     if (!c.errors || !(c.touched || c.dirty)) return null;
     const e = c.errors;
-    if (e['required']) return `${this.label()} est obligatoire.`;
-    if (e['email']) return 'Adresse email invalide.';
-    if (e['minlength']) return `${e['minlength'].requiredLength} caractères minimum.`;
-    if (e['maxlength']) return `${e['maxlength'].requiredLength} caractères maximum.`;
-    if (e['password']) return '8 caractères minimum, avec au moins une lettre et un chiffre.';
-    if (e['phone']) return 'Numéro de téléphone invalide.';
-    if (e['mismatch']) return 'Les mots de passe ne correspondent pas.';
-    if (e['server']) return e['server'];
-    return 'Valeur invalide.';
+    if (e['required']) return translate('validation.required');
+    if (e['email']) return translate('validation.email');
+    if (e['minlength']) return translate('validation.minlength', { n: e['minlength'].requiredLength });
+    if (e['maxlength']) return translate('validation.maxlength', { n: e['maxlength'].requiredLength });
+    if (e['password']) return translate('validation.password');
+    if (e['phone']) return translate('validation.phone');
+    if (e['mismatch']) return translate('validation.mismatch');
+    // Server messages are French; show a generic message in English.
+    if (e['server']) return currentLang() === 'fr' ? e['server'] : translate('validation.invalid');
+    return translate('validation.invalid');
   });
 }

@@ -5,6 +5,7 @@ import { catchError, map, of, startWith } from 'rxjs';
 import { PublicApi } from '../../core/api';
 import { AuthService } from '../../core/auth.service';
 import { BRAND } from '../../core/config';
+import { currentLang, I18n, TKey, TranslatePipe } from '../../core/i18n/i18n';
 import { ClinicInfo } from '../../core/models';
 import { BadgeComponent } from '../../ui/badge';
 import { BannerComponent } from '../../ui/banner';
@@ -15,7 +16,7 @@ type Load<T> = { state: 'loading' } | { state: 'ok'; data: T } | { state: 'error
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, IconComponent, BadgeComponent, BannerComponent, SkeletonComponent],
+  imports: [RouterLink, IconComponent, BadgeComponent, BannerComponent, SkeletonComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     .hero { position: relative; overflow: hidden; padding-block: clamp(32px, 6vw, 72px) clamp(56px, 8vw, 110px); }
@@ -102,22 +103,21 @@ type Load<T> = { state: 'loading' } | { state: 'ok'; data: T } | { state: 'error
     <section class="hero">
       <div class="container hero-grid">
         <div class="animate-in">
-          <app-badge tone="accent" [dot]="true" [pulse]="true">Nouveaux créneaux disponibles en ligne</app-badge>
-          <h1>Révéler votre beauté, <em>naturellement.</em></h1>
+          <app-badge tone="accent" [dot]="true" [pulse]="true">{{ 'home.hero.badge' | t }}</app-badge>
+          <h1>{{ 'home.hero.title' | t }} <em>{{ 'home.hero.titleEm' | t }}</em></h1>
           <p class="lead">
-            {{ BRAND.doctor }} vous accompagne en chirurgie plastique, esthétique et reconstructrice avec une approche
-            sur mesure, sûre et respectueuse de votre singularité.
+            {{ 'home.hero.lead' | t: { doctor: BRAND.doctor } }}
           </p>
           <div class="ctas">
             <a class="btn btn-primary btn-lg" routerLink="/rendez-vous">
-              <app-icon name="calendar-plus" /> Prendre rendez-vous
+              <app-icon name="calendar-plus" /> {{ 'nav.book' | t }}
             </a>
-            <a class="btn btn-lg" routerLink="/contact"><app-icon name="message" /> Poser une question</a>
+            <a class="btn btn-lg" routerLink="/contact"><app-icon name="message" /> {{ 'home.hero.ask' | t }}</a>
           </div>
           <div class="trust">
-            <app-badge icon="shield-check" [outline]="true" tone="success">Données de santé protégées</app-badge>
-            <app-badge icon="clock" [outline]="true">Réponse sous 48 h</app-badge>
-            <app-badge icon="award" [outline]="true" tone="accent">Chirurgienne qualifiée</app-badge>
+            <app-badge icon="shield-check" [outline]="true" tone="success">{{ 'home.hero.trustData' | t }}</app-badge>
+            <app-badge icon="clock" [outline]="true">{{ 'home.hero.trustReply' | t }}</app-badge>
+            <app-badge icon="award" [outline]="true" tone="accent">{{ 'home.hero.trustSurgeon' | t }}</app-badge>
           </div>
         </div>
 
@@ -134,11 +134,11 @@ type Load<T> = { state: 'loading' } | { state: 'ok'; data: T } | { state: 'error
           </div>
           <div class="float-card fc1">
             <span class="ic"><app-icon name="calendar" [size]="17" /></span>
-            <span><strong>Rendez-vous en ligne</strong><span class="muted">24 h/24 · 7 j/7</span></span>
+            <span><strong>{{ 'home.hero.cardOnline' | t }}</strong><span class="muted">{{ 'home.hero.cardOnlineSub' | t }}</span></span>
           </div>
           <div class="float-card fc2">
             <span class="ic"><app-icon name="sparkles" [size]="17" /></span>
-            <span><strong>Résultats naturels</strong><span class="muted">Approche sur mesure</span></span>
+            <span><strong>{{ 'home.hero.cardNatural' | t }}</strong><span class="muted">{{ 'home.hero.cardNaturalSub' | t }}</span></span>
           </div>
         </div>
       </div>
@@ -146,10 +146,10 @@ type Load<T> = { state: 'loading' } | { state: 'ok'; data: T } | { state: 'error
 
     <section class="strip">
       <div class="container grid grid-4 stagger">
-        <div><div class="num">15+</div><div class="num-label">années d'expérience</div></div>
-        <div><div class="num">13</div><div class="num-label">interventions proposées</div></div>
-        <div><div class="num">45 min</div><div class="num-label">de première consultation</div></div>
-        <div><div class="num">48 h</div><div class="num-label">pour répondre à vos messages</div></div>
+        <div><div class="num">15+</div><div class="num-label">{{ 'home.stats.years' | t }}</div></div>
+        <div><div class="num">13</div><div class="num-label">{{ 'home.stats.procedures' | t }}</div></div>
+        <div><div class="num">45 min</div><div class="num-label">{{ 'home.stats.consultation' | t }}</div></div>
+        <div><div class="num">48 h</div><div class="num-label">{{ 'home.stats.reply' | t }}</div></div>
       </div>
     </section>
 
@@ -157,18 +157,18 @@ type Load<T> = { state: 'loading' } | { state: 'ok'; data: T } | { state: 'error
       <div class="container">
         <div class="head">
           <div>
-            <span class="eyebrow">Expertises</span>
-            <h2>Une chirurgie de précision, au service de l'harmonie.</h2>
+            <span class="eyebrow">{{ 'home.expertise.eyebrow' | t }}</span>
+            <h2>{{ 'home.expertise.title' | t }}</h2>
           </div>
-          <a class="btn" routerLink="/interventions">Toutes les interventions <app-icon name="arrow-right" [size]="16" /></a>
+          <a class="btn" routerLink="/interventions">{{ 'home.expertise.all' | t }} <app-icon name="arrow-right" [size]="16" /></a>
         </div>
         <div class="grid grid-3 stagger">
-          @for (e of expertises; track e.title) {
-            <a class="card card-hover expertise" routerLink="/interventions" [queryParams]="{ categorie: e.title }">
+          @for (e of expertises; track e.category) {
+            <a class="card card-hover expertise" [routerLink]="e.link ? '/interventions' : '/rendez-vous'" [queryParams]="e.link ? { categorie: e.category } : {}">
               <span class="ic"><app-icon [name]="e.icon" [size]="22" /></span>
-              <h3>{{ e.title }}</h3>
-              <p>{{ e.text }}</p>
-              <span class="more">Découvrir <app-icon name="arrow-right" [size]="15" /></span>
+              <h3>{{ e.title | t }}</h3>
+              <p>{{ e.text | t }}</p>
+              <span class="more">{{ 'home.expertise.discover' | t }} <app-icon name="arrow-right" [size]="15" /></span>
             </a>
           }
         </div>
@@ -179,20 +179,18 @@ type Load<T> = { state: 'loading' } | { state: 'ok'; data: T } | { state: 'error
       <div class="container doctor">
         <div class="portrait">
           <span class="mono">CL</span>
-          <div class="caption"><strong>{{ BRAND.doctor }}</strong><br />{{ BRAND.doctorTitle }}</div>
+          <div class="caption"><strong>{{ BRAND.doctor }}</strong><br />{{ 'home.doctor.title' | t }}</div>
         </div>
         <div>
-          <span class="eyebrow">Le docteur</span>
-          <h2 style="margin-top: 12px">Une écoute attentive, un geste d'exception.</h2>
-          <p class="quote">« Mon objectif n'est pas de transformer, mais de révéler ce qui vous ressemble déjà. »</p>
+          <span class="eyebrow">{{ 'home.doctor.eyebrow' | t }}</span>
+          <h2 style="margin-top: 12px">{{ 'home.doctor.heading' | t }}</h2>
+          <p class="quote">{{ 'home.doctor.quote' | t }}</p>
           <p class="lead">
-            Chaque projet débute par une consultation approfondie : analyse morphologique, écoute de vos attentes,
-            explication détaillée des techniques, des risques et du parcours de soins. Un délai de réflexion est
-            toujours respecté avant toute intervention.
+            {{ 'home.doctor.text' | t }}
           </p>
           <div class="values">
             @for (v of values; track v) {
-              <div class="value"><span class="ic"><app-icon name="check" [size]="16" /></span><span>{{ v }}</span></div>
+              <div class="value"><span class="ic"><app-icon name="check" [size]="16" /></span><span>{{ v | t }}</span></div>
             }
           </div>
         </div>
@@ -203,15 +201,15 @@ type Load<T> = { state: 'loading' } | { state: 'ok'; data: T } | { state: 'error
       <div class="container">
         <div class="head">
           <div>
-            <span class="eyebrow">Votre parcours</span>
-            <h2>Simple, transparent, entièrement accompagné.</h2>
+            <span class="eyebrow">{{ 'home.journey.eyebrow' | t }}</span>
+            <h2>{{ 'home.journey.title' | t }}</h2>
           </div>
         </div>
         <div class="grid grid-4 steps stagger">
-          <div class="card step"><h4>Réservez en ligne</h4><p>Créez votre espace patient et choisissez un créneau en quelques clics.</p></div>
-          <div class="card step"><h4>Consultation</h4><p>Un échange approfondi pour définir ensemble le projet le plus adapté.</p></div>
-          <div class="card step"><h4>Intervention</h4><p>Dans un établissement agréé, avec une équipe dédiée à votre confort.</p></div>
-          <div class="card step"><h4>Suivi</h4><p>Contrôles post-opératoires et messagerie sécurisée avec le docteur.</p></div>
+          <div class="card step"><h4>{{ 'home.journey.s1' | t }}</h4><p>{{ 'home.journey.s1Text' | t }}</p></div>
+          <div class="card step"><h4>{{ 'home.journey.s2' | t }}</h4><p>{{ 'home.journey.s2Text' | t }}</p></div>
+          <div class="card step"><h4>{{ 'home.journey.s3' | t }}</h4><p>{{ 'home.journey.s3Text' | t }}</p></div>
+          <div class="card step"><h4>{{ 'home.journey.s4' | t }}</h4><p>{{ 'home.journey.s4Text' | t }}</p></div>
         </div>
       </div>
     </section>
@@ -219,7 +217,7 @@ type Load<T> = { state: 'loading' } | { state: 'ok'; data: T } | { state: 'error
     <section class="section" style="padding-top: 0">
       <div class="container info">
         <div class="card card-pad">
-          <div class="card-title"><h3>Horaires du cabinet</h3><app-icon name="clock" class="muted" /></div>
+          <div class="card-title"><h3>{{ 'home.info.hours' | t }}</h3><app-icon name="clock" class="muted" /></div>
           @switch (clinic().state) {
             @case ('loading') {
               <div class="stack" style="--gap: 16px">
@@ -231,15 +229,15 @@ type Load<T> = { state: 'loading' } | { state: 'ok'; data: T } | { state: 'error
               </div>
             }
             @case ('error') {
-              <app-banner tone="warning" title="Horaires momentanément indisponibles">
-                Le serveur démarre peut-être (hébergement en veille). Réessayez dans quelques secondes.
+              <app-banner tone="warning" [title]="'home.info.hoursError' | t">
+                {{ 'home.info.hoursErrorText' | t }}
               </app-banner>
             }
             @case ('ok') {
               <ul class="hours">
                 @for (h of okClinic()!.openingHours; track h.day) {
-                  <li [class.today]="h.day.toLowerCase() === today">
-                    <span>{{ h.day }}</span><span [class.muted]="h.hours === 'Fermé'">{{ h.hours }}</span>
+                  <li [class.today]="h.day === today">
+                    <span>{{ i18n.weekday(h.day) }}</span><span [class.muted]="!h.open">{{ hours(h.open, h.close) }}</span>
                   </li>
                 }
               </ul>
@@ -247,20 +245,20 @@ type Load<T> = { state: 'loading' } | { state: 'ok'; data: T } | { state: 'error
           }
         </div>
         <div class="card card-pad stack" style="--gap: 18px">
-          <div class="card-title" style="margin: 0"><h3>Nous trouver</h3><app-icon name="map-pin" class="muted" /></div>
+          <div class="card-title" style="margin: 0"><h3>{{ 'home.info.findUs' | t }}</h3><app-icon name="map-pin" class="muted" /></div>
           <p class="text-2">{{ BRAND.address }}</p>
           <div class="row">
             <a class="btn btn-sm" [href]="'tel:' + BRAND.phoneHref"><app-icon name="phone" [size]="15" /> {{ BRAND.phone }}</a>
-            <a class="btn btn-sm" routerLink="/contact"><app-icon name="mail" [size]="15" /> Écrire au cabinet</a>
+            <a class="btn btn-sm" routerLink="/contact"><app-icon name="mail" [size]="15" /> {{ 'home.info.write' | t }}</a>
           </div>
-          <app-banner tone="premium" title="Votre espace patient">
-            Suivez vos rendez-vous, échangez avec le docteur et retrouvez tout votre parcours au même endroit.
+          <app-banner tone="premium" [title]="'home.info.spaceTitle' | t">
+            {{ 'home.info.spaceText' | t }}
             <div actions>
               @if (auth.isLoggedIn()) {
-                <a class="btn btn-accent btn-sm" [routerLink]="auth.homeFor()">Accéder à mon espace</a>
+                <a class="btn btn-accent btn-sm" [routerLink]="auth.homeFor()">{{ 'home.info.goToSpace' | t }}</a>
               } @else {
-                <a class="btn btn-accent btn-sm" routerLink="/inscription">Créer mon espace</a>
-                <a class="btn btn-sm" style="--btn-bg: transparent; --btn-fg: #f3ece2; --btn-border: #5a4a36" routerLink="/connexion">Se connecter</a>
+                <a class="btn btn-accent btn-sm" routerLink="/inscription">{{ 'home.info.createSpace' | t }}</a>
+                <a class="btn btn-sm" style="--btn-bg: transparent; --btn-fg: #f3ece2; --btn-border: #5a4a36" routerLink="/connexion">{{ 'home.info.signIn' | t }}</a>
               }
             </div>
           </app-banner>
@@ -272,7 +270,9 @@ type Load<T> = { state: 'loading' } | { state: 'ok'; data: T } | { state: 'error
 export class HomePage {
   protected readonly BRAND = BRAND;
   protected readonly auth = inject(AuthService);
-  protected readonly today = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', timeZone: BRAND.timeZone }).format(new Date());
+  protected readonly i18n = inject(I18n);
+  /** Today as a day code (MONDAY…SUNDAY) in the clinic time zone. */
+  protected readonly today = new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone: BRAND.timeZone }).format(new Date()).toUpperCase();
 
   protected readonly clinic = toSignal(
     inject(PublicApi)
@@ -285,24 +285,27 @@ export class HomePage {
     { requireSync: true },
   );
 
+  /** "09:00", "18:00" → "09h00 – 18h00" (FR) / "09:00 – 18:00" (EN); "closed" when missing. */
+  protected hours(open?: string, close?: string) {
+    if (!open || !close) return this.i18n.t('home.info.closed');
+    const f = (t: string) => (currentLang() === 'fr' ? t.replace(':', 'h') : t);
+    return `${f(open)} – ${f(close)}`;
+  }
+
   protected okClinic() {
     const c = this.clinic();
     return c.state === 'ok' ? c.data : null;
   }
 
-  protected readonly expertises = [
-    { title: 'Visage', icon: 'sparkles', text: 'Rhinoplastie, blépharoplastie, lifting cervico-facial, otoplastie : sublimer les traits sans les figer.' },
-    { title: 'Seins', icon: 'heart', text: 'Augmentation, réduction ou lifting mammaire, avec un résultat harmonieux et adapté à votre silhouette.' },
-    { title: 'Silhouette', icon: 'activity', text: 'Liposuccion, abdominoplastie et lipofilling pour redessiner les courbes du corps.' },
-    { title: 'Médecine esthétique', icon: 'star', text: 'Acide hyaluronique et toxine botulique : des gestes précis, sans éviction sociale.' },
-    { title: 'Reconstructrice', icon: 'shield', text: 'Reconstruction mammaire, cicatrices, séquelles de brûlures ou de traumatismes.' },
-    { title: 'Consultation', icon: 'calendar', text: 'Un premier rendez-vous de 45 minutes pour construire ensemble votre projet, sans engagement.' },
+  /** category = French category name sent by the API, used as the ?categorie= filter. */
+  protected readonly expertises: { category: string; link: boolean; icon: string; title: TKey; text: TKey }[] = [
+    { category: 'Visage', link: true, icon: 'sparkles', title: 'categories.Visage', text: 'home.expertise.face' },
+    { category: 'Seins', link: true, icon: 'heart', title: 'categories.Seins', text: 'home.expertise.breast' },
+    { category: 'Silhouette', link: true, icon: 'activity', title: 'categories.Silhouette', text: 'home.expertise.body' },
+    { category: 'Médecine esthétique', link: true, icon: 'star', title: 'categories.Médecine esthétique', text: 'home.expertise.aesthetic' },
+    { category: 'Reconstructrice', link: true, icon: 'shield', title: 'categories.Reconstructrice', text: 'home.expertise.reconstructive' },
+    { category: 'consultation', link: false, icon: 'calendar', title: 'home.expertise.consultationTitle', text: 'home.expertise.consultation' },
   ];
 
-  protected readonly values = [
-    'Consultation d’information détaillée et devis personnalisé',
-    'Délai de réflexion légal systématiquement respecté',
-    'Interventions en établissement agréé, sous anesthésie adaptée',
-    'Suivi post-opératoire rapproché et messagerie dédiée',
-  ];
+  protected readonly values: TKey[] = ['home.doctor.v1', 'home.doctor.v2', 'home.doctor.v3', 'home.doctor.v4'];
 }

@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, effect, ElementRef, input, output, viewChild } from '@angular/core';
 import { IconComponent } from './icon';
+import { TranslatePipe } from '../core/i18n/i18n';
 
 /** Modal built on <dialog> (focus trap, Escape, blurred backdrop). Bottom sheet on mobile. */
 @Component({
   selector: 'app-modal',
-  imports: [IconComponent],
+  imports: [IconComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     dialog {
@@ -64,7 +65,7 @@ import { IconComponent } from './icon';
             <p class="sub">{{ subtitle() }}</p>
           }
         </div>
-        <button class="close" type="button" (click)="closed.emit()" aria-label="Fermer">
+        <button class="close" type="button" (click)="closed.emit()" [attr.aria-label]="'common.close' | t">
           <app-icon name="x" [size]="17" />
         </button>
       </header>

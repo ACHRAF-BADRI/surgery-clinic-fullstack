@@ -5,6 +5,7 @@ import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 import { API } from './config';
 import { ToastService } from './toast.service';
+import { translate } from './i18n/i18n';
 
 /** Adds the JWT and handles session expiry / account restriction. */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
@@ -21,7 +22,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       const isAuthCall = req.url.includes('/auth/login') || req.url.includes('/auth/register');
       if (err instanceof HttpErrorResponse && err.status === 401 && token && isApi && !isAuthCall) {
         auth.logout(false);
-        toast.warning('Session expirée', 'Merci de vous reconnecter pour continuer.');
+        toast.warning(translate('session.expired'), translate('session.expiredText'));
         router.navigate(['/connexion'], { queryParams: { returnUrl: router.url } });
       }
       return throwError(() => err);

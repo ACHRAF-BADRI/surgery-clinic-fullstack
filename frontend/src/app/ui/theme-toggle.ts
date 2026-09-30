@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ThemeService } from '../core/theme.service';
 import { IconComponent } from './icon';
+import { TranslatePipe } from '../core/i18n/i18n';
 
 @Component({
   selector: 'app-theme-toggle',
-  imports: [IconComponent],
+  imports: [IconComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     button {
@@ -23,8 +24,8 @@ import { IconComponent } from './icon';
   `,
   template: `
     <button type="button" [class.dark]="theme.resolved() === 'dark'" (click)="theme.toggle($event)"
-      [attr.aria-label]="theme.resolved() === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'"
-      [attr.title]="theme.resolved() === 'dark' ? 'Mode clair' : 'Mode sombre'">
+      [attr.aria-label]="(theme.resolved() === 'dark' ? 'theme.toLight' : 'theme.toDark') | t"
+      [attr.title]="(theme.resolved() === 'dark' ? 'theme.light' : 'theme.dark') | t">
       <span class="ico sun"><app-icon name="sun" [size]="18" /></span>
       <span class="ico moon"><app-icon name="moon" [size]="17" /></span>
     </button>

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
 import { IconComponent } from './icon';
+import { TranslatePipe } from '../core/i18n/i18n';
 
 export type BannerTone = 'info' | 'success' | 'warning' | 'danger' | 'accent' | 'premium';
 
@@ -15,7 +16,7 @@ const ICONS: Record<BannerTone, string> = {
 /** Info banner: semantic tones + dark "premium" variant with an animated sheen. */
 @Component({
   selector: 'app-banner',
-  imports: [IconComponent],
+  imports: [IconComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     :host { display: block; }
@@ -90,7 +91,7 @@ const ICONS: Record<BannerTone, string> = {
           <div class="actions"><ng-content select="[actions]" /></div>
         </div>
         @if (dismissible()) {
-          <button class="close" type="button" (click)="dismiss()" aria-label="Fermer">
+          <button class="close" type="button" (click)="dismiss()" [attr.aria-label]="'common.close' | t">
             <app-icon name="x" [size]="16" />
           </button>
         }
