@@ -46,10 +46,12 @@ import { TranslatePipe } from '../core/i18n/i18n';
     .account:hover { border-color: var(--accent-line); }
     .burger {
       width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface);
-      display: grid; place-items: center; cursor: pointer; color: var(--text);
+      display: grid; place-items: center; cursor: pointer; color: var(--text); flex-shrink: 0;
     }
     .lang-mobile { display: none; }
-    @media (max-width: 420px) { .actions app-lang-toggle { display: none; } .lang-mobile { display: block; margin-top: 8px; } }
+    .lang-mobile { align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; font-size: .9rem; font-weight: 600; color: var(--text-2); }
+    /* Below the desktop breakpoint the language switch lives in the menu, to keep the header uncluttered. */
+    @media (max-width: 959px) { .actions app-lang-toggle { display: none; } .lang-mobile { display: flex; } }
     @media (min-width: 960px) {
       nav.desktop { display: flex; }
       .desktop-only { display: inline-flex; }
@@ -126,7 +128,7 @@ import { TranslatePipe } from '../core/i18n/i18n';
             <a class="btn btn-primary btn-lg" routerLink="/rendez-vous">{{ 'nav.book' | t }}</a>
             <a class="btn btn-lg" routerLink="/connexion">{{ 'nav.login' | t }}</a>
           }
-          <div class="lang-mobile"><app-lang-toggle /></div>
+          <div class="lang-mobile"><span>{{ 'lang.label' | t }}</span><app-lang-toggle /></div>
         </div>
       </div>
     }
