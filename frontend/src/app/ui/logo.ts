@@ -18,6 +18,8 @@ import { TranslatePipe } from '../core/i18n/i18n';
     .name { font-family: var(--font-display); font-size: 1.5rem; font-weight: 600; line-height: 1; letter-spacing: .01em; }
     .sub { display: block; font-size: .62rem; letter-spacing: .24em; text-transform: uppercase; color: var(--text-3); margin-top: 4px; font-weight: 600; }
     .compact .sub { display: none; }
+    /* On phones the header logo drops its subtitle to leave room for the actions. */
+    @media (max-width: 640px) { :host-context(header) .sub { display: none; } }
   `,
   template: `
     <a routerLink="/" [class.compact]="compact()" [attr.aria-label]="BRAND.name + ' — ' + ('nav.home' | t)">

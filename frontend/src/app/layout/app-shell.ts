@@ -61,6 +61,9 @@ interface NavSection {
       background: var(--accent); color: var(--accent-contrast); font-size: .72rem; font-weight: 700;
       animation: scale-in .3s var(--ease) both;
     }
+    /* On mobile the language switch lives in the drawer, to keep the top bar uncluttered. */
+    .drawer-lang { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 4px 4px 12px; font-size: .84rem; font-weight: 600; color: var(--text-2); }
+    .topbar-lang { display: none; }
     .me {
       display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 16px;
       background: var(--surface-2); border: 1px solid var(--border);
@@ -81,13 +84,14 @@ interface NavSection {
     .topbar .right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
     .icon-btn {
       width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface);
-      display: grid; place-items: center; cursor: pointer; color: var(--text);
+      display: grid; place-items: center; cursor: pointer; color: var(--text); flex-shrink: 0;
     }
     main { padding: 28px 16px 64px; max-width: 1240px; margin: 0 auto; }
 
     @media (min-width: 1024px) {
       aside { transform: none; }
-      .scrim, .burger { display: none; }
+      .scrim, .burger, .drawer-lang { display: none; }
+      .topbar-lang { display: block; }
       .content { margin-left: 272px; }
       .topbar { padding: 0 32px; }
       .topbar .mobile-logo { display: none; }
@@ -115,6 +119,7 @@ interface NavSection {
           </div>
         }
       </nav>
+      <div class="drawer-lang"><span>{{ 'lang.label' | t }}</span><app-lang-toggle /></div>
       <div class="me">
         <app-avatar [name]="auth.displayName()" [size]="38" />
         <div class="who">
@@ -142,7 +147,7 @@ interface NavSection {
           <a class="btn btn-ghost btn-sm" routerLink="/">
             <app-icon name="arrow-left" [size]="15" /> {{ 'shell.site' | t }}
           </a>
-          <app-lang-toggle />
+          <app-lang-toggle class="topbar-lang" />
           <app-theme-toggle />
         </div>
       </div>
