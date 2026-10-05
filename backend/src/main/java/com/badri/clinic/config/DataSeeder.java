@@ -60,16 +60,28 @@ public class DataSeeder implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         var seed = props.seed();
         if (!users.existsByRole(Role.ADMIN)) {
-            users.save(account("Admin", "Cabinet", seed.adminEmail(), seed.adminPassword(), Role.ADMIN));
-            log.info("Administrateur initial créé : {}", seed.adminEmail());
+            if (blank(seed.adminEmail()) || blank(seed.adminPassword())) {
+                log.warn("No admin account exists and ADMIN_EMAIL / ADMIN_PASSWORD are not set: nobody can administer the app.");
+            } else {
+                users.save(account("Admin", "Cabinet", seed.adminEmail(), seed.adminPassword(), Role.ADMIN));
+                log.info("Administrateur initial créé : {}", seed.adminEmail());
+            }
         }
         if (!users.existsByRole(Role.DOCTOR)) {
-            users.save(account(seed.doctorFirstName(), seed.doctorLastName(), seed.doctorEmail(), seed.doctorPassword(), Role.DOCTOR));
-            log.info("Docteur initial créé : {}", seed.doctorEmail());
+            if (blank(seed.doctorEmail()) || blank(seed.doctorPassword())) {
+                log.warn("No doctor account exists and DOCTOR_EMAIL / DOCTOR_PASSWORD are not set: appointments cannot be booked.");
+            } else {
+                users.save(account(seed.doctorFirstName(), seed.doctorLastName(), seed.doctorEmail(), seed.doctorPassword(), Role.DOCTOR));
+                log.info("Docteur initial créé : {}", seed.doctorEmail());
+            }
         }
         if (seed.demoData() && users.countByRole(Role.PATIENT) == 0) {
             seedDemo();
         }
+    }
+
+    private static boolean blank(String s) {
+        return s == null || s.isBlank();
     }
 
     private User account(String first, String last, String email, String password, Role role) {

@@ -166,7 +166,9 @@ public class EmailService {
         }
         try {
             var payload = new LinkedHashMap<String, Object>();
-            payload.put("from", props.mail().from());
+            // A blank MAIL_FROM (e.g. left empty on the host) falls back to the Resend test sender.
+            String from = props.mail().from();
+            payload.put("from", from == null || from.isBlank() ? props.clinicName() + " <onboarding@resend.dev>" : from);
             payload.put("to", to);
             payload.put("subject", subject);
             payload.put("html", html);
