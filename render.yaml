@@ -22,9 +22,9 @@ services:
       - key: DOCTOR_NOTIFICATION_EMAIL
         sync: false
       - key: FRONTEND_URL
-        sync: false # e.g. https://clinique-badri.pages.dev
+        sync: false # e.g. https://badri-clinic.pages.dev
       - key: ALLOWED_ORIGINS
-        sync: false # e.g. https://clinique-badri.pages.dev,https://*.clinique-badri.pages.dev
+        sync: false # e.g. https://badri-clinic.pages.dev,https://*.badri-clinic.pages.dev
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_PASSWORD

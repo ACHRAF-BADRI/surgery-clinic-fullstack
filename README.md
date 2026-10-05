@@ -7,6 +7,8 @@
 ![Render](https://img.shields.io/badge/API-Render-46e3b7?logo=render&logoColor=white)
 ![Cloudflare Pages](https://img.shields.io/badge/Front-Cloudflare%20Pages-f38020?logo=cloudflare&logoColor=white)
 
+**Live site: [badri-clinic.pages.dev](https://badri-clinic.pages.dev)**
+
 **Clinique Badri** is a full-stack web application for a plastic, aesthetic and reconstructive surgery practice. It combines a public website, online appointment booking, secure messaging, a doctor workspace and account administration.
 
 Three roles: **patient**, **doctor**, **admin**. Visitors without an account can browse the site and contact the clinic.
@@ -15,8 +17,8 @@ The user interface is available in **French and English** (live switch, remember
 
 | Part | Stack | Hosting |
 |---|---|---|
-| `frontend/` | Angular 21 (standalone, signals, zoneless), custom CSS | Cloudflare Pages |
-| `backend/` | Spring Boot 4.1, Java 21, Spring Security (JWT), Spring Data MongoDB | Render (Docker) |
+| `frontend/` | Angular 21 (standalone, signals, zoneless), custom CSS | Cloudflare Pages: [badri-clinic.pages.dev](https://badri-clinic.pages.dev) |
+| `backend/` | Spring Boot 4.1, Java 21, Spring Security (JWT), Spring Data MongoDB | Render (Docker): `clinique-badri-api.onrender.com` |
 | Database | MongoDB | MongoDB Atlas |
 | Email | Resend API | — |
 
@@ -132,11 +134,18 @@ Workers & Pages → **Create → Pages → Connect to Git**:
 | Root directory | `frontend` |
 | Build command | `npm run build` |
 | Build output directory | `dist/frontend/browser` |
-| Variables | `API_URL=https://<your-service>.onrender.com`, `NODE_VERSION=22` |
+| Variables | `API_URL=https://<your-service>.onrender.com` (here: `https://clinique-badri-api.onrender.com`); `NODE_VERSION=22` is optional, `.nvmrc` already selects it |
 
 `public/_redirects` handles single-page app routing and `public/_headers` adds security and cache headers.
 
-Finally, set the Pages URL in `FRONTEND_URL` and `ALLOWED_ORIGINS` on Render (e.g. `https://clinique-badri.pages.dev,https://*.clinique-badri.pages.dev` to include preview deployments).
+Finally, set the Pages URL on Render, otherwise the browser blocks the API calls and email links point nowhere:
+
+```
+FRONTEND_URL=https://badri-clinic.pages.dev
+ALLOWED_ORIGINS=https://badri-clinic.pages.dev,https://*.badri-clinic.pages.dev
+```
+
+The wildcard entry lets Cloudflare preview deployments (one per pull request) call the API too.
 
 ## Project structure
 
