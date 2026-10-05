@@ -30,7 +30,7 @@ public class CatalogService {
 
     public ClinicInfo info() {
         List<DoctorDto> doctors = users.findByRoleAndStatus(Role.DOCTOR, AccountStatus.ACTIVE).stream()
-                .map(u -> new DoctorDto(u.getId(), "Dr " + u.fullName())).toList();
+                .map(u -> new DoctorDto(u.getId(), u.displayName())).toList();
         List<OpeningHours> hours = Arrays.stream(DayOfWeek.values()).map(d -> {
             String h = props.schedule().hours().getOrDefault(d, "");
             if (h == null || h.isBlank()) return new OpeningHours(d.name(), null, null);

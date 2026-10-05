@@ -7,7 +7,7 @@ import com.badri.clinic.model.User;
 public record AuthUser(String id, String email, String name, Role role) {
 
     public static AuthUser of(User u) {
-        return new AuthUser(u.getId(), u.getEmail(), u.fullName(), u.getRole());
+        return new AuthUser(u.getId(), u.getEmail(), u.displayName(), u.getRole());
     }
 
     public boolean isStaff() {
