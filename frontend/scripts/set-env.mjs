@@ -14,7 +14,14 @@ if (existsSync(envFile)) {
     if (m) fileVars[m[1]] = m[2].replace(/^["']|["']$/g, '');
   }
 }
-const get = (key, fallback) => process.env[key] ?? fileVars[key] ?? fallback;
+// Blank values count as missing.
+const get = (key, fallback) => process.env[key]?.trim() || fileVars[key]?.trim() || fallback;
+
+// On Cloudflare Pages a missing API_URL would silently ship a site pointing at localhost: fail the build instead.
+if (process.env.CF_PAGES && !get('API_URL')) {
+  console.error('[set-env] API_URL is not set. Add it in Cloudflare Pages > Settings > Environment variables.');
+  process.exit(1);
+}
 
 const config = {
   apiUrl: get('API_URL', 'http://localhost:8080').replace(/\/+$/, ''),
