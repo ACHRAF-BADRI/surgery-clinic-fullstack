@@ -32,7 +32,8 @@ export class AuthService {
   readonly displayName = computed(() => {
     const u = this._user();
     if (!u) return '';
-    return u.role === 'DOCTOR' ? `Dr ${u.firstName} ${u.lastName}` : `${u.firstName} ${u.lastName}`;
+    // Doctors are shown as "Dr <last name>", like in the API.
+    return u.role === 'DOCTOR' ? `Dr ${u.lastName}` : `${u.firstName} ${u.lastName}`;
   });
 
   constructor() {

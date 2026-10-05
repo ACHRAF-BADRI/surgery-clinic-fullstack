@@ -1,0 +1,16 @@
+{
+  "name": "Clinique Badri",
+  "short_name": "Clinique Badri",
+  "description": "Chirurgie plastique, esthétique et reconstructrice : rendez-vous en ligne et messagerie sécurisée.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#faf7f2",
+  "theme_color": "#1f1b17",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

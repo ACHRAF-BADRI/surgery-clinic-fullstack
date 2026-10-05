@@ -47,7 +47,7 @@ app:
     doctor-email: ${DOCTOR_EMAIL:docteur@clinique-badri.fr}
     doctor-password: ${DOCTOR_PASSWORD:Docteur#2026}
     doctor-first-name: ${DOCTOR_FIRST_NAME:Camille}
-    doctor-last-name: ${DOCTOR_LAST_NAME:Laurent}
+    doctor-last-name: ${DOCTOR_LAST_NAME:Badri}
     demo-data: ${SEED_DEMO_DATA:false}
   schedule:
     slot-minutes: 30

@@ -292,7 +292,6 @@ public class AppointmentService {
 
     private static PersonRef ref(User u, String fallbackId, boolean withContact) {
         if (u == null) return new PersonRef(fallbackId, "Utilisateur supprimé", null, null, false);
-        String name = u.getRole() == Role.DOCTOR ? "Dr " + u.fullName() : u.fullName();
-        return new PersonRef(u.getId(), name, withContact ? u.getEmail() : null, withContact ? u.getPhone() : null, u.isHasAccount());
+        return new PersonRef(u.getId(), u.displayName(), withContact ? u.getEmail() : null, withContact ? u.getPhone() : null, u.isHasAccount());
     }
 }

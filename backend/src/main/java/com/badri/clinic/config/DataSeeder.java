@@ -163,7 +163,7 @@ public class DataSeeder implements ApplicationRunner {
         t.setProcedure(Procedure.BLEPHAROPLASTY);
         threads.save(t);
         message(t, Message.Sender.PATIENT, lea.getId(), lea.fullName(), "Bonjour, les paupières sont encore un peu gonflées le matin, est-ce normal ?");
-        message(t, Message.Sender.DOCTOR, doctor.getId(), doctor.fullName(),
+        message(t, Message.Sender.DOCTOR, doctor.getId(), doctor.displayName(),
                 "Bonjour Léa, c'est tout à fait normal les premières semaines. Dormez la tête surélevée et appliquez du froid.");
         message(t, Message.Sender.PATIENT, lea.getId(), lea.fullName(), "Merci beaucoup Docteur !");
         log.info("Données de démonstration créées : {} patients, {} rendez-vous", patients.size(), list.size());

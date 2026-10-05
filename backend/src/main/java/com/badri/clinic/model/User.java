@@ -51,6 +51,11 @@ public class User {
         return ((firstName == null ? "" : firstName) + " " + (lastName == null ? "" : lastName)).trim();
     }
 
+    /** Name shown to others: doctors appear as "Dr <last name>". */
+    public String displayName() {
+        return role == Role.DOCTOR ? ("Dr " + (lastName == null ? "" : lastName)).trim() : fullName();
+    }
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
     public String getFirstName() { return firstName; }

@@ -87,7 +87,7 @@ export class LoginPage {
     const { email, password } = this.form.getRawValue();
     this.auth.login(email, password).subscribe({
       next: (r) => {
-        this.toast.success(this.i18n.t('auth.login.toastHello', { name: r.user.firstName }), this.i18n.t('auth.login.toastConnected'));
+        this.toast.success(this.i18n.t('auth.login.toastHello', { name: r.user.role === 'DOCTOR' ? this.auth.displayName() : r.user.firstName }), this.i18n.t('auth.login.toastConnected'));
         const target = this.returnUrl();
         const safe = target && target.startsWith('/') && !target.startsWith('//') ? target : this.auth.homeFor(r.user.role);
         this.router.navigateByUrl(safe);

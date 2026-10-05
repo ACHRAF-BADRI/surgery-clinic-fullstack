@@ -178,7 +178,7 @@ type Load<T> = { state: 'loading' } | { state: 'ok'; data: T } | { state: 'error
     <section class="section" style="background: var(--bg-tint)">
       <div class="container doctor">
         <div class="portrait">
-          <span class="mono">CL</span>
+          <span class="mono">{{ BRAND.doctorInitials }}</span>
           <div class="caption"><strong>{{ BRAND.doctor }}</strong><br />{{ 'home.doctor.title' | t }}</div>
         </div>
         <div>

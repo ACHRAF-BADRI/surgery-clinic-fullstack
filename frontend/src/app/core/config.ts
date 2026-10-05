@@ -6,7 +6,9 @@ export const API = `${runtimeConfig.apiUrl}/api`;
 /** Clinic identity shown in the UI — edit here to customize (translated texts live in i18n/fr.ts and i18n/en.ts). */
 export const BRAND = {
   name: 'Clinique Badri',
-  doctor: 'Dr Camille Laurent',
+  doctor: 'Dr Badri',
+  /** Monogram shown on the home page portrait. */
+  doctorInitials: 'B',
   address: '18 avenue Montaigne, 75008 Paris',
   phone: '01 42 00 00 00',
   phoneHref: '+33142000000',

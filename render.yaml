@@ -36,7 +36,7 @@ services:
       - key: DOCTOR_FIRST_NAME
         value: Camille
       - key: DOCTOR_LAST_NAME
-        value: Laurent
+        value: Badri
       - key: CLINIC_TIME_ZONE
         value: Europe/Paris
       - key: SEED_DEMO_DATA
