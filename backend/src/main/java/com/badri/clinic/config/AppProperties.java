@@ -31,6 +31,12 @@ public record AppProperties(
     public record Schedule(int slotMinutes, int minNoticeHours, int patientCancelNoticeHours,
                            Map<DayOfWeek, String> hours) {}
 
+    /** Frontend base URL without a trailing slash, so links built as frontendUrl() + "/path" stay valid. */
+    @Override
+    public String frontendUrl() {
+        return frontendUrl == null ? "" : frontendUrl.trim().replaceAll("/+$", "");
+    }
+
     public ZoneId zone() {
         return ZoneId.of(timeZone);
     }
